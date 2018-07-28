@@ -56,7 +56,7 @@ import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 
 public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
@@ -146,7 +146,7 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
             activeEventHandler.registerListener(listener);
             BADJobService.redeployJobSpec(entityId, procedure.getBody(), metadataProvider, badStatementExecutor, hcc,
                     new RequestParameters(
-                            new HyracksDataset(hcc, appCtx.getCompilerProperties().getFrameSize(),
+                            new ResultSet(hcc, appCtx.getCompilerProperties().getFrameSize(),
                                     ResultReader.NUM_READERS),
                             new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
                             new IStatementExecutor.Stats(), null, null, null, null, true),

@@ -56,9 +56,9 @@ import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.ResultSetId;
 
 public class ChannelSubscribeStatement extends ExtensionStatement {
 
@@ -184,7 +184,7 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
             tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
 
             final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
-            final IHyracksDataset hdc = requestParameters.getHyracksDataset();
+            final IResultSet resultSet = requestParameters.getResultSet();
             final Stats stats = requestParameters.getStats();
             if (subscriptionId == null) {
                 //To create a new subscription
@@ -207,14 +207,14 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
 
                 InsertStatement insert = new InsertStatement(new Identifier(dataverse),
                         new Identifier(subscriptionsDatasetName), subscriptionTuple, varCounter, resultVar, accessor);
-                ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, insert, hcc, hdc,
-                        resultDelivery, null, stats, false, null, null, null);
+                ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, insert, hcc,
+                        resultSet, resultDelivery, null, stats, false, null, null, null);
             } else {
                 //To update an existing subscription
                 UpsertStatement upsert = new UpsertStatement(new Identifier(dataverse),
                         new Identifier(subscriptionsDatasetName), subscriptionTuple, varCounter, null, null);
-                ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, upsert, hcc, hdc,
-                        resultDelivery, null, stats, false, null, null, null);
+                ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, upsert, hcc,
+                        resultSet, resultDelivery, null, stats, false, null, null, null);
             }
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

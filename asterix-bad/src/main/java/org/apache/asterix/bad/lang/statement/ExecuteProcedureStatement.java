@@ -119,7 +119,7 @@ public class ExecuteProcedureStatement extends ExtensionStatement {
             Map<byte[], byte[]> contextRuntimeVarMap = createParameterMap(procedure);
             DeployedJobSpecId deployedJobSpecId = listener.getDeployedJobSpecId();
             if (procedure.getDuration().equals("")) {
-                BADJobService.runDeployedJobSpec(deployedJobSpecId, hcc, requestParameters.getHyracksDataset(),
+                BADJobService.runDeployedJobSpec(deployedJobSpecId, hcc, requestParameters.getResultSet(),
                         contextRuntimeVarMap, entityId, metadataProvider.getTxnIdFactory(), appCtx, listener,
                         (QueryTranslator) statementExecutor);
 

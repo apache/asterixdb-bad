@@ -51,11 +51,11 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.ResultSetId;
 
 /**
  * Provides functionality for channel jobs
@@ -122,7 +122,7 @@ public class BADJobService {
     }
 
     public static long runDeployedJobSpec(DeployedJobSpecId distributedId, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, Map<byte[], byte[]> jobParameters, EntityId entityId, ITxnIdFactory txnIdFactory,
+            IResultSet resultSet, Map<byte[], byte[]> jobParameters, EntityId entityId, ITxnIdFactory txnIdFactory,
             ICcApplicationContext appCtx, DeployedJobSpecEventListener listener, QueryTranslator statementExecutor)
             throws Exception {
         listener.waitWhileAtState(ActivityState.SUSPENDED);
@@ -138,7 +138,7 @@ public class BADJobService {
         long executionMilliseconds = Instant.now().toEpochMilli() - startTime;
 
         if (listener.getType() == DeployedJobSpecEventListener.PrecompiledType.QUERY) {
-            ResultReader resultReader = new ResultReader(hdc, jobId, new ResultSetId(0));
+            ResultReader resultReader = new ResultReader(resultSet, jobId, new ResultSetId(0));
 
             ResultUtil.printResults(appCtx, resultReader, statementExecutor.getSessionOutput(),
                     new IStatementExecutor.Stats(), null);
@@ -235,7 +235,7 @@ public class BADJobService {
             //Procedures
             metadataProvider.setResultSetId(new ResultSetId(0));
             IStatementExecutor.ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
-            IHyracksDataset hdc = requestParameters.getHyracksDataset();
+            IResultSet hdc = requestParameters.getResultSet();
             IStatementExecutor.Stats stats = requestParameters.getStats();
             boolean resultsAsync = resultDelivery == IStatementExecutor.ResultDelivery.ASYNC
                     || resultDelivery == IStatementExecutor.ResultDelivery.DEFERRED;
@@ -272,12 +272,12 @@ public class BADJobService {
     }
 
     private static JobSpecification compileProcedureJob(IStatementExecutor statementExecutor,
-            MetadataProvider metadataProvider, IHyracksClientConnection hcc, IHyracksDataset hdc,
+            MetadataProvider metadataProvider, IHyracksClientConnection hcc, IResultSet resultSet,
             IStatementExecutor.Stats stats, Statement procedureStatement) throws Exception {
         if (procedureStatement.getKind() == Statement.Kind.INSERT) {
             return ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(metadataProvider,
-                    procedureStatement, hcc, hdc, IStatementExecutor.ResultDelivery.ASYNC, null, stats, true, null,
-                    null, null);
+                    procedureStatement, hcc, resultSet, IStatementExecutor.ResultDelivery.ASYNC, null, stats, true,
+                    null, null, null);
         } else if (procedureStatement.getKind() == Statement.Kind.QUERY) {
             return compileQueryJob(statementExecutor, metadataProvider, hcc, (Query) procedureStatement);
         } else {

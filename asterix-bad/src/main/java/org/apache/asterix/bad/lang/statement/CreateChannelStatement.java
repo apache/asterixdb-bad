@@ -72,9 +72,9 @@ import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 
 public class CreateChannelStatement extends ExtensionStatement {
@@ -215,7 +215,7 @@ public class CreateChannelStatement extends ExtensionStatement {
     }
 
     private JobSpecification createChannelJob(IStatementExecutor statementExecutor, MetadataProvider metadataProvider,
-            IHyracksClientConnection hcc, IHyracksDataset hdc, Stats stats) throws Exception {
+            IHyracksClientConnection hcc, IResultSet resultSet, Stats stats) throws Exception {
         StringBuilder builder = new StringBuilder();
         builder.append("SET inline_with \"false\";\n");
         if (!push) {
@@ -253,7 +253,7 @@ public class CreateChannelStatement extends ExtensionStatement {
                     (Query) fStatements.get(1));
         }
         return ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(metadataProvider, fStatements.get(1),
-                hcc, hdc, ResultDelivery.ASYNC, null, stats, true, null, null, null);
+                hcc, resultSet, ResultDelivery.ASYNC, null, stats, true, null, null, null);
     }
 
     @Override
@@ -306,13 +306,14 @@ public class CreateChannelStatement extends ExtensionStatement {
             MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getApplicationContext(),
                     metadataProvider.getDefaultDataverse());
             tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
-            final IHyracksDataset hdc = requestContext.getHyracksDataset();
+            final IResultSet resultSet = requestContext.getResultSet();
             final Stats stats = requestContext.getStats();
             //Create Channel Datasets
             createDatasets(statementExecutor, tempMdProvider, hcc);
             tempMdProvider.getLocks().reset();
             //Create Channel Internal Job
-            JobSpecification channeljobSpec = createChannelJob(statementExecutor, tempMdProvider, hcc, hdc, stats);
+            JobSpecification channeljobSpec =
+                    createChannelJob(statementExecutor, tempMdProvider, hcc, resultSet, stats);
 
             // Now we subscribe
             if (listener == null) {
