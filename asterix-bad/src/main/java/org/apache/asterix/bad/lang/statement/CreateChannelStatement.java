@@ -257,9 +257,9 @@ public class CreateChannelStatement extends ExtensionStatement {
      *
      * push version:
      * SET inline_with "false";
-     * select value {"payload": {"result":r, "subscriptionId": brokerSubId}} from (
+     * select value {"payload": {"result":result, "subscriptionId": brokerSubId}} from (
      * with channelExecutionTime as current_datetime()
-     * select b.BrokerEndPoint, result as r, bs.brokerSubId as brokerSubId, channelExecutionTime
+     * select b.BrokerEndPoint, result, bs.brokerSubId as brokerSubId, channelExecutionTime
      * from steven.EmergencyChannelChannelSubscriptions sub,
      * steven.RecentEmergenciesNearUser(sub.param0) result,
      * steven.EmergencyChannelBrokerSubscriptions bs,
@@ -291,7 +291,7 @@ public class CreateChannelStatement extends ExtensionStatement {
         } else {
             builder.append(
                     "select value {\"payload\": {\"" + FUNCTION_RESULT_VAR + "\":" + FUNCTION_RESULT_VAR
-                            + ", \"subscriptionIds\": brokerSubIds}} from (\n");
+                            + ", \"subscriptionId\": brokerSubId}} from (\n");
             builder.append("with " + BADConstants.ChannelExecutionTime + " as current_datetime() \n");
             builder.append(
                     "select " + BROKER_RECORD_VAR + "." + BADConstants.BrokerEndPoint + ", " + FUNCTION_RESULT_VAR
@@ -334,10 +334,7 @@ public class CreateChannelStatement extends ExtensionStatement {
             builder.append(" returning " + INSERTED_RECORD_VAR);
 
         } else {
-            builder.append(") results\n");
-            builder.append("group by " + BADConstants.BrokerEndPoint + "," + FUNCTION_RESULT_VAR + ", "
-                    + BADConstants.ChannelExecutionTime);
-            builder.append(" group as brokerSubIds (" + BADConstants.BrokerSubscriptionId + " as subscriptionId)");
+            builder.append(") results");
         }
 
         builder.append(";");

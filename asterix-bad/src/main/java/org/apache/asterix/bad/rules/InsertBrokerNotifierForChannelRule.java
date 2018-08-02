@@ -92,9 +92,9 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
         String channelName;
         AssignOperator pushAssign = null;
         AssignOperator newAssign = null;
-        GroupByOperator pushGroupBy = null;
+        UnnestOperator pushUnnest = null;
         LogicalVariable brokerSubsVar = null;
-        LogicalVariable brokerEndpoint = null;
+        LogicalVariable brokerEndpoint = context.newVar();
         LogicalVariable brokerSubId = null;
 
         if (!push) {
@@ -138,12 +138,6 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
             }
             pushAssign = (AssignOperator) op2;
 
-            AbstractLogicalOperator op3 = (AbstractLogicalOperator) pushAssign.getInputs().get(0).getValue();
-            if (op3.getOperatorTag() != LogicalOperatorTag.GROUP) {
-                return false;
-            }
-            pushGroupBy = (GroupByOperator) op3;
-
             //if push, get the channel name here instead
             subscriptionsScan = (DataSourceScanOperator) findOp(op, LogicalOperatorTag.DATASOURCESCAN, "",
                     BADConstants.ChannelSubscriptionsType);
@@ -154,7 +148,13 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
             String datasetName = dds.getDataset().getDatasetName();
             channelDataverse = dds.getDataset().getDataverseName();
             channelName = datasetName.substring(0, datasetName.length() - 13);
-            brokerEndpoint = pushGroupBy.getGroupByList().get(0).first;
+
+            AbstractLogicalOperator unnest = (AbstractLogicalOperator) pushAssign.getInputs().get(0).getValue();
+            if (unnest.getOperatorTag() != LogicalOperatorTag.UNNEST) {
+                return false;
+            }
+
+            pushUnnest = (UnnestOperator) unnest;
         }
 
         //The channelExecutionTime is created just before the scan
@@ -173,7 +173,6 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
             if (subplanOperator == null) {
                 return false;
             }
-            brokerEndpoint = context.newVar();
             brokerSubId = context.newVar();
             brokerSubsVar = ((AggregateOperator) subplanOperator.getNestedPlans().get(0).getRoots().get(0).getValue())
                     .getVariables().get(0);
@@ -181,19 +180,18 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
             newAssign = createAssignsAndUnnest(brokerSubsVar, brokerEndpoint, brokerSubId, op, context);
 
             context.computeAndSetTypeEnvironmentForOperator(op1);
-        } else {
-            channelExecutionVar = pushGroupBy.getGroupByList().get(2).first;
+
+            //Maintain the variables through the existing project
+            ProjectOperator badProject = (ProjectOperator) findOp(op1, LogicalOperatorTag.PROJECT, "", "");
+            badProject.getVariables().add(channelExecutionVar);
+            badProject.getVariables().add(brokerSubsVar);
+            context.computeAndSetTypeEnvironmentForOperator(badProject);
         }
-        //Maintain the variables through the existing project
-        ProjectOperator badProject = (ProjectOperator) findOp(op1, LogicalOperatorTag.PROJECT, "", "");
-        badProject.getVariables().add(channelExecutionVar);
-        badProject.getVariables().add(push ? brokerEndpoint : brokerSubsVar);
-        context.computeAndSetTypeEnvironmentForOperator(badProject);
 
         //Create my brokerNotify plan above the extension Operator
         DelegateOperator dOp = push
                 ? createNotifyBrokerPushPlan(brokerEndpoint, channelExecutionVar, context, pushAssign, channelDataverse,
-                        channelName)
+                        channelName, pushUnnest)
                 : createNotifyBrokerPullPlan(brokerEndpoint, brokerSubId, channelExecutionVar, context, newAssign,
                         channelDataverse, channelName);
 
@@ -262,7 +260,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
 
     private DelegateOperator createNotifyBrokerPushPlan(LogicalVariable brokerEndpointVar,
             LogicalVariable channelExecutionVar, IOptimizationContext context, AssignOperator payLoadAssign,
-            String channelDataverse, String channelName)
+            String channelDataverse, String channelName, UnnestOperator pushUnnest)
             throws AlgebricksException {
         IVariableTypeEnvironment env = payLoadAssign.computeOutputTypeEnvironment(context);
         IAType resultType = (IAType) env.getVarType(payLoadAssign.getVariables().get(0));
@@ -273,6 +271,21 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
                 channelName, true, resultType);
 
         extensionOp.getInputs().add(new MutableObject<>(payLoadAssign));
+
+        FunctionInfo finfoGetField = (FunctionInfo) FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+        ScalarFunctionCallExpression getBrokerEndPoint = new ScalarFunctionCallExpression(finfoGetField,
+                new MutableObject<>(new VariableReferenceExpression(pushUnnest.getVariable())), new MutableObject<>(
+                        new ConstantExpression(new AsterixConstantValue(new AString(BADConstants.BrokerEndPoint)))));
+
+        AssignOperator assignBrokerEndPoint =
+                new AssignOperator(brokerEndpointVar, new MutableObject<>(getBrokerEndPoint));
+
+        assignBrokerEndPoint.getInputs().addAll(payLoadAssign.getInputs());
+        payLoadAssign.getInputs().clear();
+        payLoadAssign.getInputs().add(new MutableObject<>(assignBrokerEndPoint));
+
+        context.computeAndSetTypeEnvironmentForOperator(assignBrokerEndPoint);
+        context.computeAndSetTypeEnvironmentForOperator(payLoadAssign);
         context.computeAndSetTypeEnvironmentForOperator(extensionOp);
 
         return extensionOp;
@@ -376,9 +389,17 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
                 } else if (searchTag == LogicalOperatorTag.PROJECT) {
                     return (AbstractLogicalOperator) subOp.getValue();
 
-                } else if (searchTag == LogicalOperatorTag.DATASOURCESCAN && isSubscriptionsScan(
+                } else if (searchTag == LogicalOperatorTag.DATASOURCESCAN) {
+                    if (isSubscriptionsScan(
                         (AbstractLogicalOperator) subOp.getValue(), subscriptionsName, subscriptionType)) {
-                    return (AbstractLogicalOperator) subOp.getValue();
+                        return (AbstractLogicalOperator) subOp.getValue();
+                    } else {
+                        AbstractLogicalOperator nestedOp = findOp((AbstractLogicalOperator) subOp.getValue(), searchTag,
+                                subscriptionsName, subscriptionType);
+                        if (nestedOp != null) {
+                            return nestedOp;
+                        }
+                    }
 
                 } else if (searchTag == LogicalOperatorTag.DELEGATE_OPERATOR) {
                     DelegateOperator dOp = (DelegateOperator) subOp.getValue();

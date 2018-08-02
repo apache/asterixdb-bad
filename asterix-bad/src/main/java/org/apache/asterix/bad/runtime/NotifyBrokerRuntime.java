@@ -190,8 +190,6 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
             }
 
             if (push) {
-                int pushOffset = inputArg1.getStartOffset();
-                bbis.setByteBuffer(tRef.getFrameTupleAccessor().getBuffer(), pushOffset + 1);
                 if (!firstResult) {
                     sendStreams.get(endpoint).append(',');
                 }
