@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -78,7 +79,10 @@ public class NotifyBrokerPOperator extends AbstractPhysicalOperator {
         LogicalVariable pushListVar = ((NotifyBrokerOperator) notify.getDelegate()).getPushListVar();
         LogicalVariable brokerVar = ((NotifyBrokerOperator) notify.getDelegate()).getBrokerEndpointVariable();
         LogicalVariable executionVar = ((NotifyBrokerOperator) notify.getDelegate()).getChannelExecutionVariable();
-        IAType recordType = ((NotifyBrokerOperator) notify.getDelegate()).getRecordType();
+
+        IVariableTypeEnvironment env = context.getTypeEnvironment(op.getInputs().get(0).getValue());
+        IAType recordType = (IAType) env.getVarType(pushListVar);
+
         boolean push = ((NotifyBrokerOperator) notify.getDelegate()).getPush();
 
         int brokerColumn = inputSchemas[0].findVariable(brokerVar);

@@ -20,7 +20,6 @@ package org.apache.asterix.bad.runtime;
 
 import java.util.Collection;
 
-import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDelegatedLogicalOperator;
@@ -35,15 +34,13 @@ public class NotifyBrokerOperator extends AbstractDelegatedLogicalOperator {
     private final LogicalVariable channelExecutionVar;
     private final LogicalVariable pushListVar;
     private final boolean push;
-    private final IAType recordType;
 
     public NotifyBrokerOperator(LogicalVariable brokerEndpointVar, LogicalVariable pushListVar,
-            LogicalVariable resultSetVar, boolean push, IAType recordType) {
+            LogicalVariable resultSetVar, boolean push) {
         this.brokerEndpointVar = brokerEndpointVar;
         this.channelExecutionVar = resultSetVar;
         this.pushListVar = pushListVar;
         this.push = push;
-        this.recordType = recordType;
     }
 
     public LogicalVariable getPushListVar() {
@@ -56,10 +53,6 @@ public class NotifyBrokerOperator extends AbstractDelegatedLogicalOperator {
 
     public LogicalVariable getChannelExecutionVariable() {
         return channelExecutionVar;
-    }
-
-    public IAType getRecordType() {
-        return recordType;
     }
 
     public boolean getPush() {
@@ -79,7 +72,7 @@ public class NotifyBrokerOperator extends AbstractDelegatedLogicalOperator {
 
     @Override
     public IOperatorDelegate newInstance() {
-        return new NotifyBrokerOperator(brokerEndpointVar, pushListVar, channelExecutionVar, push, recordType);
+        return new NotifyBrokerOperator(brokerEndpointVar, pushListVar, channelExecutionVar, push);
     }
 
     @Override

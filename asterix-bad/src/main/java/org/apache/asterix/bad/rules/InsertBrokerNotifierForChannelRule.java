@@ -31,7 +31,6 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -44,7 +43,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -182,10 +180,9 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
     }
 
     private DelegateOperator createBrokerOp(LogicalVariable brokerEndpointVar, LogicalVariable sendVar,
-            LogicalVariable channelExecutionVar, String channelDataverse, String channelName, boolean push,
-            IAType resultType) {
+            LogicalVariable channelExecutionVar, String channelDataverse, String channelName, boolean push) {
         NotifyBrokerOperator notifyBrokerOp =
-                new NotifyBrokerOperator(brokerEndpointVar, sendVar, channelExecutionVar, push, resultType);
+                new NotifyBrokerOperator(brokerEndpointVar, sendVar, channelExecutionVar, push);
         EntityId activeId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, channelDataverse, channelName);
         NotifyBrokerPOperator notifyBrokerPOp = new NotifyBrokerPOperator(activeId);
         notifyBrokerOp.setPhysicalOperator(notifyBrokerPOp);
@@ -203,12 +200,10 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
         while (assign.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             assign = (AbstractLogicalOperator) assign.getInputs().get(0).getValue();
         }
-        IVariableTypeEnvironment env = assign.computeOutputTypeEnvironment(context);
-        IAType resultType = (IAType) env.getVarType(sendVar);
 
         //Create the NotifyBrokerOperator
         DelegateOperator extensionOp = createBrokerOp(brokerEndpointVar, sendVar, channelExecutionVar, channelDataverse,
-                channelName, true, resultType);
+                channelName, true);
 
         extensionOp.getInputs().add(new MutableObject<>(eOp));
         context.computeAndSetTypeEnvironmentForOperator(extensionOp);
@@ -260,7 +255,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
 
         //Create the NotifyBrokerOperator
         DelegateOperator extensionOp = createBrokerOp(brokerEndpointVar, sendListVar, channelExecutionVar,
-                channelDataverse, channelName, false, null);
+                channelDataverse, channelName, false);
 
         //Set the input for the distinct as the old top
         extensionOp.getInputs().add(new MutableObject<>(groupbyOp));
