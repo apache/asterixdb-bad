@@ -95,7 +95,14 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
         eval2 = channelExecutionEvalFactory.createScalarEvaluator(ctx);
         this.entityId = activeJobId;
         this.push = push;
-        recordPrinterFactory = new ARecordPrinterFactory((ARecordType) recordType).createPrinter();
+        if (push) {
+            //for push-based channel, the recordType is the result record type (records are sent directly)
+            recordPrinterFactory = new ARecordPrinterFactory((ARecordType) recordType).createPrinter();
+        } else {
+            //for pull-based channels, the recordType is a list of subscription ids
+            //the subscriptionIdListPrinterFactory is used instead
+            recordPrinterFactory = null;
+        }
         subscriptionIdListPrinterFactory =
                 new AOrderedlistPrinterFactory(new AOrderedListType(BuiltinType.AUUID, null)).createPrinter();
         executionTimeString = null;
