@@ -114,7 +114,7 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
     }
 
     public String createData(String endpoint) {
-        String resultTitle = "\"subscriptionIds";
+        String resultTitle = "\"subscriptionIds\"";
         if (push) {
             resultTitle = "\"results\"";
         }
