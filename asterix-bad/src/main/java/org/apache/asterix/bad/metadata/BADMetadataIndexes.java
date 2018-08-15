@@ -32,17 +32,17 @@ public class BADMetadataIndexes {
 
     public static final ExtensionMetadataDatasetId BAD_CHANNEL_INDEX_ID = new ExtensionMetadataDatasetId(
             BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.CHANNEL_EXTENSION_NAME);
-    public static final MetadataIndexImmutableProperties PROPERTIES_CHANNEL = new MetadataIndexImmutableProperties(
-            BADConstants.CHANNEL_EXTENSION_NAME,
-            MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID,
-            MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID);
+    public static final MetadataIndexImmutableProperties PROPERTIES_CHANNEL =
+            new MetadataIndexImmutableProperties(BADConstants.CHANNEL_EXTENSION_NAME,
+                    MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID,
+                    MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID);
 
-    public static final ExtensionMetadataDatasetId BAD_BROKER_INDEX_ID = new ExtensionMetadataDatasetId(
-            BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.BROKER_KEYWORD);
-    public static final MetadataIndexImmutableProperties PROPERTIES_BROKER = new MetadataIndexImmutableProperties(
-            BADConstants.BROKER_KEYWORD,
-            MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 1,
-            MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 1);
+    public static final ExtensionMetadataDatasetId BAD_BROKER_INDEX_ID =
+            new ExtensionMetadataDatasetId(BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.BROKER_KEYWORD);
+    public static final MetadataIndexImmutableProperties PROPERTIES_BROKER =
+            new MetadataIndexImmutableProperties(BADConstants.BROKER_KEYWORD,
+                    MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 1,
+                    MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 1);
 
     public static final ExtensionMetadataDatasetId BAD_PROCEDURE_INDEX_ID = new ExtensionMetadataDatasetId(
             BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.PROCEDURE_KEYWORD);
@@ -61,7 +61,7 @@ public class BADMetadataIndexes {
             Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
                     Arrays.asList(BADConstants.ChannelName)),
             0, BADMetadataRecordTypes.CHANNEL_RECORDTYPE, true, new int[] { 0, 1 }, BAD_CHANNEL_INDEX_ID,
-            new ChannelTupleTranslator(true));
+            () -> new ChannelTupleTranslator(true));
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static final ExtensionMetadataDataset BROKER_DATASET = new ExtensionMetadataDataset(PROPERTIES_BROKER,
@@ -69,7 +69,7 @@ public class BADMetadataIndexes {
             Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
                     Arrays.asList(BADConstants.BrokerName)),
             0, BADMetadataRecordTypes.BROKER_RECORDTYPE, true, new int[] { 0, 1 }, BAD_BROKER_INDEX_ID,
-            new BrokerTupleTranslator(true));
+            () -> new BrokerTupleTranslator(true));
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static final ExtensionMetadataDataset PROCEDURE_DATASET = new ExtensionMetadataDataset(PROPERTIES_PROCEDURE,
@@ -77,6 +77,6 @@ public class BADMetadataIndexes {
             Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
                     Arrays.asList(BADConstants.ProcedureName), Arrays.asList(BADConstants.FIELD_NAME_ARITY)),
             0, BADMetadataRecordTypes.PROCEDURE_RECORDTYPE, true, new int[] { 0, 1, 2 }, BAD_PROCEDURE_INDEX_ID,
-            new ProcedureTupleTranslator(true));
+            () -> new ProcedureTupleTranslator(true));
 
 }
