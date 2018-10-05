@@ -30,7 +30,7 @@
   <!-- project coordinates -->
   <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-opt-bom</artifactId>
-  <version>0.9.4-SNAPSHOT</version>
+  <version>0.9.5-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>asterix-opt-bom</name>
   <description>BAD Extension to AsterixDB</description>
