@@ -217,4 +217,9 @@ public class DeployedJobSpecEventListener implements IActiveEntityEventsListener
     public int getRunningInstance() {
         return runningInstance;
     }
+
+    @Override
+    public synchronized boolean isSuspended() {
+        return state == ActivityState.SUSPENDED;
+    }
 }
