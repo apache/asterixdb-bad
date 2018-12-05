@@ -145,12 +145,12 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
             listener.suspend();
             activeEventHandler.registerListener(listener);
             BADJobService.redeployJobSpec(entityId, procedure.getBody(), metadataProvider, badStatementExecutor, hcc,
-                    new RequestParameters(
-                            new ResultSet(hcc, appCtx.getCompilerProperties().getFrameSize(),
-                                    ResultReader.NUM_READERS),
+                    new RequestParameters(new ResultSet(hcc,
+                            appCtx.getServiceContext().getControllerService().getNetworkSecurityManager()
+                                    .getSocketChannelFactory(), appCtx.getCompilerProperties().getFrameSize(),
+                            ResultReader.NUM_READERS),
                             new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                            new IStatementExecutor.Stats(), null, null, null, null, true),
-                    true);
+                            new IStatementExecutor.Stats(), null, null, null, null, true), true);
             metadataProvider.getLocks().unlock();
             //Log that the procedure stopped by cluster restart. Procedure is available again now.
             LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverse() + "."
