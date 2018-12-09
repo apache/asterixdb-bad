@@ -297,7 +297,7 @@ public class BADStatementExecutor extends QueryTranslator {
 
     @Override
     protected void handleDataverseDropStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Identifier dvId = ((DataverseDropStatement) stmt).getDataverseName();
@@ -333,8 +333,6 @@ public class BADStatementExecutor extends QueryTranslator {
                 }
             }
         }
-        final IRequestParameters requestParameters =
-                new RequestParameters(null, null, null, null, null, null, null, true);
         for (Channel channel : channels) {
             if (!channel.getChannelId().getDataverse().equals(dvId.getValue())) {
                 continue;
@@ -360,7 +358,7 @@ public class BADStatementExecutor extends QueryTranslator {
             drop.handle(hcc, this, requestParameters, tempMdProvider, 0, null);
         }
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-        super.handleDataverseDropStatement(metadataProvider, stmt, hcc);
+        super.handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
     }
 
 }
