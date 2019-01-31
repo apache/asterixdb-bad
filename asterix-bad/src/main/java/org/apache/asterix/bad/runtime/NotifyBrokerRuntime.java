@@ -178,11 +178,7 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
                 int resultSetOffset = inputArg2.getStartOffset();
                 bbis.setByteBuffer(tRef.getFrameTupleAccessor().getBuffer(), resultSetOffset + 1);
                 ADateTime executionTime = ADateTimeSerializerDeserializer.INSTANCE.deserialize(di);
-                try {
-                    executionTimeString = executionTime.toSimpleString();
-                } catch (IOException e) {
-                    throw HyracksDataException.create(e);
-                }
+                executionTimeString = executionTime.toSimpleString();
             }
 
             int serBrokerOffset = inputArg0.getStartOffset();
