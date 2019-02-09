@@ -21,6 +21,7 @@ package org.apache.asterix.bad.recovery;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
@@ -32,6 +33,7 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.app.translator.RequestParameters;
+import org.apache.asterix.common.api.RequestReference;
 import org.apache.asterix.bad.BADJobService;
 import org.apache.asterix.bad.lang.BADCompilationProvider;
 import org.apache.asterix.bad.lang.BADLangExtension;
@@ -121,8 +123,10 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
                             : PrecompiledType.CHANNEL);
             listener.suspend();
             activeEventHandler.registerListener(listener);
+            RequestReference requestReference =
+                    RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
             BADJobService.redeployJobSpec(entityId, channel.getChannelBody(), metadataProvider, badStatementExecutor,
-                    hcc, new RequestParameters(null, null, null, null, null, null, null, true), true);
+                    hcc, new RequestParameters(requestReference, null, null, null, null, null, null, null, null, true), true);
 
             ScheduledExecutorService ses = BADJobService.startRepetitiveDeployedJobSpec(listener.getDeployedJobSpecId(),
                     hcc,
@@ -144,8 +148,10 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
                     new DeployedJobSpecEventListener(appCtx, entityId, PrecompiledType.valueOf(procedure.getType()));
             listener.suspend();
             activeEventHandler.registerListener(listener);
+            RequestReference requestReference =
+                    RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
             BADJobService.redeployJobSpec(entityId, procedure.getBody(), metadataProvider, badStatementExecutor, hcc,
-                    new RequestParameters(new ResultSet(hcc,
+                    new RequestParameters(requestReference, null, new ResultSet(hcc,
                             appCtx.getServiceContext().getControllerService().getNetworkSecurityManager()
                                     .getSocketChannelFactory(), appCtx.getCompilerProperties().getFrameSize(),
                             ResultReader.NUM_READERS),
