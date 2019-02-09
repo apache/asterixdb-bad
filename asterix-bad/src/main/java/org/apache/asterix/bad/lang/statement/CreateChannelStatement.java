@@ -68,7 +68,6 @@ import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
-import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -258,8 +257,8 @@ public class CreateChannelStatement extends ExtensionStatement {
 
     @Override
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
-            IRequestParameters requestContext, MetadataProvider metadataProvider, int resultSetId,
-            IStatementExecutorContext executorCtx) throws HyracksDataException, AlgebricksException {
+            IRequestParameters requestContext, MetadataProvider metadataProvider, int resultSetId)
+            throws HyracksDataException, AlgebricksException {
         //This function performs three tasks:
         //1. Create datasets for the Channel
         //2. Create and run the Channel Job

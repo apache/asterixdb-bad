@@ -340,7 +340,7 @@ public class BADStatementExecutor extends QueryTranslator {
             tempMdProvider.getLocks().reset();
             ChannelDropStatement drop =
                     new ChannelDropStatement(dvId, new Identifier(channel.getChannelId().getEntityName()), false);
-            drop.handle(hcc, this, requestParameters, tempMdProvider, 0, null);
+            drop.handle(hcc, this, requestParameters, tempMdProvider, 0);
         }
         for (Procedure procedure : procedures) {
             if (!procedure.getEntityId().getDataverse().equals(dvId.getValue())) {
@@ -349,13 +349,13 @@ public class BADStatementExecutor extends QueryTranslator {
             tempMdProvider.getLocks().reset();
             ProcedureDropStatement drop = new ProcedureDropStatement(new FunctionSignature(dvId.getValue(),
                     procedure.getEntityId().getEntityName(), procedure.getArity()), false);
-            drop.handle(hcc, this, requestParameters, tempMdProvider, 0, null);
+            drop.handle(hcc, this, requestParameters, tempMdProvider, 0);
         }
         List<Broker> brokers = BADLangExtension.getBrokers(mdTxnCtx, dvId.getValue());
         for (Broker broker : brokers) {
             tempMdProvider.getLocks().reset();
             BrokerDropStatement drop = new BrokerDropStatement(dvId, new Identifier(broker.getBrokerName()), false);
-            drop.handle(hcc, this, requestParameters, tempMdProvider, 0, null);
+            drop.handle(hcc, this, requestParameters, tempMdProvider, 0);
         }
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         super.handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
