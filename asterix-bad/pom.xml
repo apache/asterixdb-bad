@@ -56,7 +56,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
-        <version>2.6</version>
         <executions>
           <execution>
             <id>javacc</id>
@@ -81,7 +80,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.9</version>
         <executions>
           <execution>
             <id>add-source</id>
@@ -104,6 +102,19 @@
           <excludes combine.children="append">
             <exclude>src/test/resources/**/results/**</exclude>
           </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <usedDependencies>
+            <usedDependency>org.apache.hadoop:hadoop-minicluster</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-fuzzyjoin</usedDependency>
+          </usedDependencies>
+          <ignoredUnusedDeclaredDependencies>
+            <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-common</ignoredUnusedDeclaredDependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
     </plugins>
@@ -145,20 +156,6 @@
                 </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.10</version>
-          <configuration>
-            <usedDependencies>
-              <usedDependency>org.apache.hadoop:hadoop-minicluster</usedDependency>
-              <usedDependency>org.apache.asterix:asterix-fuzzyjoin</usedDependency>
-            </usedDependencies>
-            <ignoredUnusedDeclaredDependencies>
-              <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-common</ignoredUnusedDeclaredDependency>
-            </ignoredUnusedDeclaredDependencies>
           </configuration>
         </plugin>
       </plugins>
