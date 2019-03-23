@@ -166,7 +166,6 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
         badProject.getVariables().add(channelExecutionVar);
         context.computeAndSetTypeEnvironmentForOperator(badProject);
 
-
         //Create my brokerNotify plan above the extension Operator
         DelegateOperator dOp = push
                 ? createNotifyBrokerPushPlan(brokerEndpointVar, badProject.getVariables().get(0), channelExecutionVar,
@@ -202,8 +201,8 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
         }
 
         //Create the NotifyBrokerOperator
-        DelegateOperator extensionOp = createBrokerOp(brokerEndpointVar, sendVar, channelExecutionVar, channelDataverse,
-                channelName, true);
+        DelegateOperator extensionOp =
+                createBrokerOp(brokerEndpointVar, sendVar, channelExecutionVar, channelDataverse, channelName, true);
 
         extensionOp.getInputs().add(new MutableObject<>(eOp));
         context.computeAndSetTypeEnvironmentForOperator(extensionOp);
@@ -212,17 +211,16 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
 
     }
 
-    private DelegateOperator createNotifyBrokerPullPlan(LogicalVariable brokerEndpointVar,
-            LogicalVariable sendVar, LogicalVariable channelExecutionVar, IOptimizationContext context,
-            ILogicalOperator eOp, DistributeResultOperator distributeOp, String channelDataverse, String channelName)
-                    throws AlgebricksException {
+    private DelegateOperator createNotifyBrokerPullPlan(LogicalVariable brokerEndpointVar, LogicalVariable sendVar,
+            LogicalVariable channelExecutionVar, IOptimizationContext context, ILogicalOperator eOp,
+            DistributeResultOperator distributeOp, String channelDataverse, String channelName)
+            throws AlgebricksException {
 
         //Create the Distinct Op
         ArrayList<Mutable<ILogicalExpression>> expressions = new ArrayList<>();
         VariableReferenceExpression vExpr = new VariableReferenceExpression(sendVar);
         expressions.add(new MutableObject<>(vExpr));
         DistinctOperator distinctOp = new DistinctOperator(expressions);
-
 
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = new ArrayList<>();
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByDecorList = new ArrayList<>();
@@ -251,7 +249,6 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
 
         //add nested plans
         nestedPlans.add(new ALogicalPlanImpl(new MutableObject<>(listifyOp)));
-
 
         //Create the NotifyBrokerOperator
         DelegateOperator extensionOp = createBrokerOp(brokerEndpointVar, sendListVar, channelExecutionVar,
@@ -318,8 +315,8 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
                 if (isBrokerScan((AbstractLogicalOperator) subOp.getValue())) {
                     return op;
                 } else {
-                    AbstractLogicalOperator nestedOp = findOp((AbstractLogicalOperator) subOp.getValue(),
-                            lookingForString);
+                    AbstractLogicalOperator nestedOp =
+                            findOp((AbstractLogicalOperator) subOp.getValue(), lookingForString);
                     if (nestedOp != null) {
                         return nestedOp;
                     }
@@ -329,8 +326,8 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
                 if (subOp.getValue().getOperatorTag() == LogicalOperatorTag.PROJECT) {
                     return (AbstractLogicalOperator) subOp.getValue();
                 } else {
-                    AbstractLogicalOperator nestedOp = findOp((AbstractLogicalOperator) subOp.getValue(),
-                            lookingForString);
+                    AbstractLogicalOperator nestedOp =
+                            findOp((AbstractLogicalOperator) subOp.getValue(), lookingForString);
                     if (nestedOp != null) {
                         return nestedOp;
                     }
@@ -341,8 +338,8 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
                 if (isSubscriptionsScan((AbstractLogicalOperator) subOp.getValue(), lookingForString)) {
                     return (AbstractLogicalOperator) subOp.getValue();
                 } else {
-                    AbstractLogicalOperator nestedOp = findOp((AbstractLogicalOperator) subOp.getValue(),
-                            lookingForString);
+                    AbstractLogicalOperator nestedOp =
+                            findOp((AbstractLogicalOperator) subOp.getValue(), lookingForString);
                     if (nestedOp != null) {
                         return nestedOp;
                     }

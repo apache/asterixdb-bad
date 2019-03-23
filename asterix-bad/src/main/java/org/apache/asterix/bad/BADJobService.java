@@ -210,8 +210,7 @@ public class BADJobService {
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
-        DeployedJobSpecEventListener listener =
-                (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);
+        DeployedJobSpecEventListener listener = (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);
         if (listener == null) {
             LOGGER.severe("Tried to redeploy the job for " + entityId + " but no listener exists.");
             return;

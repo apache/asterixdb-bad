@@ -67,7 +67,6 @@ public class BADLangExtension implements ILangExtension {
         return ExtensionKind.LANG;
     }
 
-
     public static Broker getBroker(MetadataTransactionContext mdTxnCtx, String dataverseName, String brokerName)
             throws AlgebricksException {
         BrokerSearchKey brokerSearchKey = new BrokerSearchKey(dataverseName, brokerName);

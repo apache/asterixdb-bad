@@ -96,8 +96,7 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
         }
 
         String returnType = ((AString) procedureRecord
-                .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_TYPE_FIELD_INDEX))
-                        .getStringValue();
+                .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_TYPE_FIELD_INDEX)).getStringValue();
 
         String definition = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_DEFINITION_FIELD_INDEX))

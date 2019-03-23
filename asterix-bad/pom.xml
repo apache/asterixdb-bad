@@ -27,7 +27,6 @@
     <properties>
     <asterix.version>0.9.5-SNAPSHOT</asterix.version>
     <hyracks.version>0.3.5-SNAPSHOT</hyracks.version>
-    <source-format.skip>true</source-format.skip>
     <testLog4jConfigFile>${root.dir}/../../asterix-app/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
     </properties>
     <build>
@@ -115,6 +114,21 @@
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-common</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>net.revelc.code.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>${source-format.goal}</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <configFile>../../../hyracks-fullstack/AsterixCodeFormatProfile.xml</configFile>
+          <skipFormatting>${source-format.skip}</skipFormatting>
         </configuration>
       </plugin>
     </plugins>

@@ -206,8 +206,7 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
                     sendStreams.get(endpoint).append(',');
                 }
                 subscriptionIdListPrinterFactory.print(inputArg1.getByteArray(), inputArg1.getStartOffset(),
-                        inputArg1.getLength(),
-                        sendStreams.get(endpoint));
+                        inputArg1.getLength(), sendStreams.get(endpoint));
             }
             firstResult = false;
         }

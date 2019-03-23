@@ -43,7 +43,7 @@ public class BADOptimizerTest extends OptimizerTest {
         extensionLangCompilationProvider = new BADCompilationProvider();
         statementExecutorFactory = new BADQueryTranslatorFactory();
 
-        integrationUtil.init(true,TEST_CONFIG_FILE_NAME);
+        integrationUtil.init(true, TEST_CONFIG_FILE_NAME);
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,

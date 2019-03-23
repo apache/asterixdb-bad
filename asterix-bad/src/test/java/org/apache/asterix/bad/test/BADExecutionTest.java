@@ -47,8 +47,8 @@ public class BADExecutionTest {
     protected static final Logger LOGGER = Logger.getLogger(BADExecutionTest.class.getName());
 
     protected static final String PATH_ACTUAL = "target/rttest" + File.separator;
-    protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
-            File.separator);
+    protected static final String PATH_BASE =
+            StringUtils.join(new String[] { "src", "test", "resources", "runtimets" }, File.separator);
 
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
 
@@ -64,7 +64,8 @@ public class BADExecutionTest {
     public static void setUp() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-        ExecutionTestUtil.setUp(cleanupOnStart, TEST_CONFIG_FILE_NAME, new AsterixHyracksIntegrationUtil(), false, null);
+        ExecutionTestUtil.setUp(cleanupOnStart, TEST_CONFIG_FILE_NAME, new AsterixHyracksIntegrationUtil(), false,
+                null);
     }
 
     @AfterClass

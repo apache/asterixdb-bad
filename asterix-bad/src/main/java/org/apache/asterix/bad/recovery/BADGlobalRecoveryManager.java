@@ -118,19 +118,19 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
         for (Channel channel : channels) {
             EntityId entityId = channel.getChannelId();
             metadataProvider = new MetadataProvider(appCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
-            DeployedJobSpecEventListener listener = new DeployedJobSpecEventListener(appCtx, entityId,
-                    channel.getResultsDatasetName().equals("") ? PrecompiledType.PUSH_CHANNEL
-                            : PrecompiledType.CHANNEL);
+            DeployedJobSpecEventListener listener =
+                    new DeployedJobSpecEventListener(appCtx, entityId, channel.getResultsDatasetName().equals("")
+                            ? PrecompiledType.PUSH_CHANNEL : PrecompiledType.CHANNEL);
             listener.suspend();
             activeEventHandler.registerListener(listener);
             RequestReference requestReference =
                     RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
             BADJobService.redeployJobSpec(entityId, channel.getChannelBody(), metadataProvider, badStatementExecutor,
-                    hcc, new RequestParameters(requestReference, null, null, null, null, null, null, null, null, true), true);
+                    hcc, new RequestParameters(requestReference, null, null, null, null, null, null, null, null, true),
+                    true);
 
             ScheduledExecutorService ses = BADJobService.startRepetitiveDeployedJobSpec(listener.getDeployedJobSpecId(),
-                    hcc,
-                    BADJobService.findPeriod(channel.getDuration()), new HashMap<>(), entityId,
+                    hcc, BADJobService.findPeriod(channel.getDuration()), new HashMap<>(), entityId,
                     metadataProvider.getTxnIdFactory(), listener);
             listener.setExecutorService(ses);
             metadataProvider.getLocks().unlock();
@@ -151,12 +151,14 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
             RequestReference requestReference =
                     RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
             BADJobService.redeployJobSpec(entityId, procedure.getBody(), metadataProvider, badStatementExecutor, hcc,
-                    new RequestParameters(requestReference, null, new ResultSet(hcc,
-                            appCtx.getServiceContext().getControllerService().getNetworkSecurityManager()
-                                    .getSocketChannelFactory(), appCtx.getCompilerProperties().getFrameSize(),
-                            ResultReader.NUM_READERS),
+                    new RequestParameters(requestReference, null,
+                            new ResultSet(hcc,
+                                    appCtx.getServiceContext().getControllerService().getNetworkSecurityManager()
+                                            .getSocketChannelFactory(),
+                                    appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS),
                             new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                            new IStatementExecutor.Stats(), null, null, null, null, true), true);
+                            new IStatementExecutor.Stats(), null, null, null, null, true),
+                    true);
             metadataProvider.getLocks().unlock();
             //Log that the procedure stopped by cluster restart. Procedure is available again now.
             LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverse() + "."

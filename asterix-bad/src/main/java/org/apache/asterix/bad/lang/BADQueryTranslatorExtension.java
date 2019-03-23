@@ -27,8 +27,8 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class BADQueryTranslatorExtension implements IStatementExecutorExtension {
 
-    public static final ExtensionId BAD_QUERY_TRANSLATOR_EXTENSION_ID = new ExtensionId(
-            BADQueryTranslatorExtension.class.getSimpleName(), 0);
+    public static final ExtensionId BAD_QUERY_TRANSLATOR_EXTENSION_ID =
+            new ExtensionId(BADQueryTranslatorExtension.class.getSimpleName(), 0);
 
     private static class LazyHolder {
         private static final IStatementExecutorFactory INSTANCE = new BADQueryTranslatorFactory();

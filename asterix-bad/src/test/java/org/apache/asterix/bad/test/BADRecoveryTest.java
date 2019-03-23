@@ -128,7 +128,6 @@ public class BADRecoveryTest {
         this.tcCtx = tcCtx;
     }
 
-
     @Test
     public void test() throws Exception {
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, pb, false);
