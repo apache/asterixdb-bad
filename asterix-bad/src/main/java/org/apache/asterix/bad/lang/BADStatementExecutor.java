@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.translator.QueryTranslator;
-import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.bad.BADJobService;
 import org.apache.asterix.bad.lang.statement.BrokerDropStatement;
 import org.apache.asterix.bad.lang.statement.ChannelDropStatement;

@@ -19,7 +19,6 @@
 package org.apache.asterix.bad.test;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
