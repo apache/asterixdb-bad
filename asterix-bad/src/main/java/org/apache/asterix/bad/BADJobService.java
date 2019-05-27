@@ -32,13 +32,14 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.lang.BADParserFactory;
 import org.apache.asterix.bad.lang.BADStatementExecutor;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
+import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.lang.common.base.Statement;
@@ -139,9 +140,10 @@ public class BADJobService {
 
         if (listener.getType() == DeployedJobSpecEventListener.PrecompiledType.QUERY) {
             ResultReader resultReader = new ResultReader(resultSet, jobId, new ResultSetId(0));
-
-            ResultUtil.printResults(appCtx, resultReader, statementExecutor.getSessionOutput(),
-                    new IStatementExecutor.Stats(), null);
+            IResponsePrinter printer = statementExecutor.getResponsePrinter();
+            printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, new IStatementExecutor.Stats(),
+                    statementExecutor.getSessionOutput()));
+            printer.printResults();
         }
 
         LOGGER.log(Level.SEVERE,

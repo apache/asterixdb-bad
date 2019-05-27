@@ -32,6 +32,7 @@ import org.apache.asterix.bad.metadata.Broker;
 import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
 import org.apache.asterix.bad.metadata.Procedure;
+import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -57,8 +58,8 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 public class BADStatementExecutor extends QueryTranslator {
 
     public BADStatementExecutor(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
-            ILangCompilationProvider compliationProvider, ExecutorService executorService) {
-        super(appCtx, statements, output, compliationProvider, executorService);
+            ILangCompilationProvider compliationProvider, ExecutorService executorService, IResponsePrinter printer) {
+        super(appCtx, statements, output, compliationProvider, executorService, printer);
     }
 
     //TODO: Most of this file could go away if we had metadata dependencies

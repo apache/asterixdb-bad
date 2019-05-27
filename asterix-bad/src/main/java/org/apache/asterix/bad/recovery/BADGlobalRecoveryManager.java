@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
+import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.app.translator.RequestParameters;
@@ -94,10 +95,12 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
             throws Exception {
         SessionConfig sessionConfig =
                 new SessionConfig(SessionConfig.OutputFormat.ADM, true, true, true, SessionConfig.PlanFormat.STRING);
-
-        BADStatementExecutor badStatementExecutor = new BADStatementExecutor(appCtx, new ArrayList<>(),
-                new SessionOutput(sessionConfig, null), new BADCompilationProvider(), Executors.newSingleThreadExecutor(
-                        new HyracksThreadFactory(DefaultStatementExecutorFactory.class.getSimpleName())));
+        final SessionOutput sessionOutput = new SessionOutput(sessionConfig, null);
+        BADStatementExecutor badStatementExecutor =
+                new BADStatementExecutor(appCtx, new ArrayList<>(), sessionOutput, new BADCompilationProvider(),
+                        Executors.newSingleThreadExecutor(
+                                new HyracksThreadFactory(DefaultStatementExecutorFactory.class.getSimpleName())),
+                        new ResponsePrinter(sessionOutput));
 
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
