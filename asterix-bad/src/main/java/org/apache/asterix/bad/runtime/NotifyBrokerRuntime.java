@@ -46,8 +46,10 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -90,9 +92,10 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
             IScalarEvaluatorFactory pushListEvalFactory, IScalarEvaluatorFactory channelExecutionEvalFactory,
             EntityId activeJobId, boolean push, IAType recordType) throws HyracksDataException {
         this.tRef = new FrameTupleReference();
-        eval0 = brokerEvalFactory.createScalarEvaluator(ctx);
-        eval1 = pushListEvalFactory.createScalarEvaluator(ctx);
-        eval2 = channelExecutionEvalFactory.createScalarEvaluator(ctx);
+        IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
+        eval0 = brokerEvalFactory.createScalarEvaluator(evalCtx);
+        eval1 = pushListEvalFactory.createScalarEvaluator(evalCtx);
+        eval2 = channelExecutionEvalFactory.createScalarEvaluator(evalCtx);
         this.entityId = activeJobId;
         this.push = push;
         if (push) {
