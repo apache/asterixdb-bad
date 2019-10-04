@@ -82,7 +82,7 @@ Statement DropStatement() throws ParseException:
       }
               | "broker" pairId = QualifiedName() ifExists = IfExists()
       {
-        stmt = new BrokerDropStatement(pairId.first, pairId.second, ifExists);	
+        stmt = new BrokerDropStatement(pairId.first, pairId.second, ifExists);
       }
               | "procedure" funcSig = FunctionSignature() ifExists = IfExists()
       {
@@ -244,10 +244,7 @@ Statement ChannelSubscriptionStatement() throws ParseException:
    }
    | "unsubscribe" id = StringLiteral() <FROM> nameComponents = QualifiedName()
       {
-        VariableExpr varExp = new VariableExpr();
-        VarIdentifier var = new VarIdentifier();
-        varExp.setVar(var);
-        var.setValue("$subscriptionPlaceholder");
+        VariableExpr varExp = new VariableExpr(new VarIdentifier("$subscriptionPlaceholder"));
         getCurrentScope().addNewVarSymbolToScope(varExp.getVar());
         stmt = new ChannelUnsubscribeStatement(varExp, nameComponents.first, nameComponents.second, id, getVarCounter());
       }
