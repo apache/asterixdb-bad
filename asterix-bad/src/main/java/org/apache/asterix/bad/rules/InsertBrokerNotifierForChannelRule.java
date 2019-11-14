@@ -26,8 +26,10 @@ import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.bad.runtime.NotifyBrokerOperator;
 import org.apache.asterix.bad.runtime.NotifyBrokerPOperator;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -84,7 +86,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
             push = true;
         }
         DataSourceScanOperator subscriptionsScan;
-        String channelDataverse;
+        DataverseName channelDataverse;
         String channelName;
 
         if (!push) {
@@ -102,7 +104,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
             }
             DatasetDataSource dds = (DatasetDataSource) insertOp.getDataSource();
             String datasetName = dds.getDataset().getDatasetName();
-            if (!dds.getDataset().getItemTypeDataverseName().equals("Metadata")
+            if (!dds.getDataset().getItemTypeDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
                     || !dds.getDataset().getItemTypeName().equals("ChannelResultsType")
                     || !datasetName.endsWith("Results")) {
                 return false;
@@ -179,7 +181,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
     }
 
     private DelegateOperator createBrokerOp(LogicalVariable brokerEndpointVar, LogicalVariable sendVar,
-            LogicalVariable channelExecutionVar, String channelDataverse, String channelName, boolean push) {
+            LogicalVariable channelExecutionVar, DataverseName channelDataverse, String channelName, boolean push) {
         NotifyBrokerOperator notifyBrokerOp =
                 new NotifyBrokerOperator(brokerEndpointVar, sendVar, channelExecutionVar, push);
         EntityId activeId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, channelDataverse, channelName);
@@ -192,7 +194,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
 
     private DelegateOperator createNotifyBrokerPushPlan(LogicalVariable brokerEndpointVar, LogicalVariable sendVar,
             LogicalVariable channelExecutionVar, IOptimizationContext context, ILogicalOperator eOp,
-            DistributeResultOperator distributeOp, String channelDataverse, String channelName)
+            DistributeResultOperator distributeOp, DataverseName channelDataverse, String channelName)
             throws AlgebricksException {
         //Find the assign operator to get the result type that we need
         AbstractLogicalOperator assign = (AbstractLogicalOperator) eOp.getInputs().get(0).getValue();
@@ -213,7 +215,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
 
     private DelegateOperator createNotifyBrokerPullPlan(LogicalVariable brokerEndpointVar, LogicalVariable sendVar,
             LogicalVariable channelExecutionVar, IOptimizationContext context, ILogicalOperator eOp,
-            DistributeResultOperator distributeOp, String channelDataverse, String channelName)
+            DistributeResultOperator distributeOp, DataverseName channelDataverse, String channelName)
             throws AlgebricksException {
 
         //Create the Distinct Op
@@ -354,7 +356,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
         if (op instanceof DataSourceScanOperator) {
             if (((DataSourceScanOperator) op).getDataSource() instanceof DatasetDataSource) {
                 DatasetDataSource dds = (DatasetDataSource) ((DataSourceScanOperator) op).getDataSource();
-                if (dds.getDataset().getDataverseName().equals("Metadata")
+                if (dds.getDataset().getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
                         && dds.getDataset().getDatasetName().equals("Broker")) {
                     return true;
                 }
@@ -367,7 +369,7 @@ public class InsertBrokerNotifierForChannelRule implements IAlgebraicRewriteRule
         if (op instanceof DataSourceScanOperator) {
             if (((DataSourceScanOperator) op).getDataSource() instanceof DatasetDataSource) {
                 DatasetDataSource dds = (DatasetDataSource) ((DataSourceScanOperator) op).getDataSource();
-                if (dds.getDataset().getItemTypeDataverseName().equals("Metadata")
+                if (dds.getDataset().getItemTypeDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)
                         && dds.getDataset().getItemTypeName().equals("ChannelSubscriptionsType")) {
                     if (subscriptionsName.equals("") || dds.getDataset().getDatasetName().equals(subscriptionsName)) {
                         return true;

@@ -19,15 +19,12 @@
 
 package org.apache.asterix.bad.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.exceptions.MetadataException;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -35,7 +32,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -55,34 +52,23 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
     // Payload field containing serialized Procedure.
     public static final int PROCEDURE_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BADMetadataRecordTypes.PROCEDURE_RECORDTYPE);
-
     private transient OrderedListBuilder dependenciesListBuilder = new OrderedListBuilder();
     private transient OrderedListBuilder dependencyListBuilder = new OrderedListBuilder();
     private transient OrderedListBuilder dependencyNameListBuilder = new OrderedListBuilder();
+    private transient List<String> dependencySubnames = new ArrayList<>();
     private transient AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
-    private transient AOrderedListType ListofLists =
+    private transient AOrderedListType listOfLists =
             new AOrderedListType(new AOrderedListType(BuiltinType.ASTRING, null), null);
 
     protected ProcedureTupleTranslator(boolean getTuple) {
-        super(getTuple, BADMetadataIndexes.NUM_FIELDS_PROCEDURE_IDX);
+        super(getTuple, BADMetadataIndexes.PROCEDURE_DATASET, PROCEDURE_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public Procedure getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(PROCEDURE_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(PROCEDURE_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(PROCEDURE_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord procedureRecord = recordSerDes.deserialize(in);
-        return createProcedureFromARecord(procedureRecord);
-    }
-
-    private Procedure createProcedureFromARecord(ARecord procedureRecord) {
-        String dataverseName = ((AString) procedureRecord
+    public Procedure createMetadataEntityFromARecord(ARecord procedureRecord) throws HyracksDataException {
+        String dataverseCanonicalName = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String procedureName = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_NAME_FIELD_INDEX)).getStringValue();
         String arity = ((AString) procedureRecord
@@ -112,39 +98,44 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
 
         IACursor dependenciesCursor = ((AOrderedList) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_DEPENDENCIES_FIELD_INDEX)).getCursor();
-        List<List<List<String>>> dependencies = new ArrayList<>();
-        AOrderedList dependencyList;
-        AOrderedList qualifiedList;
-        int i = 0;
+        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>();
         while (dependenciesCursor.next()) {
-            dependencies.add(new ArrayList<>());
-            dependencyList = (AOrderedList) dependenciesCursor.get();
-            IACursor qualifiedDependencyCursor = dependencyList.getCursor();
-            int j = 0;
+            List<Triple<DataverseName, String, String>> dependencyList = new ArrayList<>();
+            IACursor qualifiedDependencyCursor = ((AOrderedList) dependenciesCursor.get()).getCursor();
             while (qualifiedDependencyCursor.next()) {
-                qualifiedList = (AOrderedList) qualifiedDependencyCursor.get();
-                IACursor qualifiedNameCursor = qualifiedList.getCursor();
-                dependencies.get(i).add(new ArrayList<>());
-                while (qualifiedNameCursor.next()) {
-                    dependencies.get(i).get(j).add(((AString) qualifiedNameCursor.get()).getStringValue());
-                }
-                j++;
+                Triple<DataverseName, String, String> dependency =
+                        getDependency((AOrderedList) qualifiedDependencyCursor.get());
+                dependencyList.add(dependency);
             }
-            i++;
-
+            dependencies.add(dependencyList);
         }
 
         return new Procedure(dataverseName, procedureName, Integer.parseInt(arity), params, returnType, definition,
                 language, duration, dependencies);
+    }
 
+    static Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames) {
+        String dataverseCanonicalName = ((AString) dependencySubnames.getItem(0)).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        String second = null, third = null;
+        int ln = dependencySubnames.size();
+        if (ln > 1) {
+            second = ((AString) dependencySubnames.getItem(1)).getStringValue();
+            if (ln > 2) {
+                third = ((AString) dependencySubnames.getItem(2)).getStringValue();
+            }
+        }
+        return new Triple<>(dataverseName, second, third);
     }
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(Procedure procedure)
             throws HyracksDataException, MetadataException {
+        String dataverseCanonicalName = procedure.getEntityId().getDataverseName().getCanonicalForm();
+
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(procedure.getEntityId().getDataverse());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
         aString.setValue(procedure.getEntityId().getEntityName());
@@ -160,7 +151,7 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(procedure.getEntityId().getDataverse());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.PROCEDURE_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
 
@@ -218,12 +209,13 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
         // write field 8
         dependenciesListBuilder.reset((AOrderedListType) BADMetadataRecordTypes.PROCEDURE_RECORDTYPE
                 .getFieldTypes()[BADMetadataRecordTypes.PROCEDURE_ARECORD_DEPENDENCIES_FIELD_INDEX]);
-        List<List<List<String>>> dependenciesList = procedure.getDependencies();
-        for (List<List<String>> dependencies : dependenciesList) {
-            dependencyListBuilder.reset(ListofLists);
-            for (List<String> dependency : dependencies) {
+        List<List<Triple<DataverseName, String, String>>> dependenciesList = procedure.getDependencies();
+        for (List<Triple<DataverseName, String, String>> dependencies : dependenciesList) {
+            dependencyListBuilder.reset(listOfLists);
+            for (Triple<DataverseName, String, String> dependency : dependencies) {
                 dependencyNameListBuilder.reset(stringList);
-                for (String subName : dependency) {
+                getDependencySubNames(dependency, dependencySubnames);
+                for (String subName : dependencySubnames) {
                     itemValue.reset();
                     aString.setValue(subName);
                     stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -250,4 +242,14 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
         return tuple;
     }
 
+    static void getDependencySubNames(Triple<DataverseName, String, String> dependency, List<String> outList) {
+        outList.clear();
+        outList.add(dependency.first.getCanonicalForm());
+        if (dependency.second != null) {
+            outList.add(dependency.second);
+        }
+        if (dependency.third != null) {
+            outList.add(dependency.third);
+        }
+    }
 }

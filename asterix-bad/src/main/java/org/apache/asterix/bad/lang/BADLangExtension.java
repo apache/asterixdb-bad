@@ -33,6 +33,7 @@ import org.apache.asterix.bad.metadata.DataverseProceduresSearchKey;
 import org.apache.asterix.bad.metadata.Procedure;
 import org.apache.asterix.bad.metadata.ProcedureSearchKey;
 import org.apache.asterix.common.api.ExtensionId;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -67,7 +68,7 @@ public class BADLangExtension implements ILangExtension {
         return ExtensionKind.LANG;
     }
 
-    public static Broker getBroker(MetadataTransactionContext mdTxnCtx, String dataverseName, String brokerName)
+    public static Broker getBroker(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String brokerName)
             throws AlgebricksException {
         BrokerSearchKey brokerSearchKey = new BrokerSearchKey(dataverseName, brokerName);
         List<Broker> brokers = MetadataManager.INSTANCE.getEntities(mdTxnCtx, brokerSearchKey);
@@ -80,8 +81,8 @@ public class BADLangExtension implements ILangExtension {
         }
     }
 
-    public static Channel getChannel(MetadataTransactionContext mdTxnCtx, String dataverseName, String channelName)
-            throws AlgebricksException {
+    public static Channel getChannel(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+            String channelName) throws AlgebricksException {
         ChannelSearchKey channelSearchKey = new ChannelSearchKey(dataverseName, channelName);
         List<Channel> channels = MetadataManager.INSTANCE.getEntities(mdTxnCtx, channelSearchKey);
         if (channels.isEmpty()) {
@@ -93,7 +94,7 @@ public class BADLangExtension implements ILangExtension {
         }
     }
 
-    public static Procedure getProcedure(MetadataTransactionContext mdTxnCtx, String dataverseName,
+    public static Procedure getProcedure(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String procedureName, String arity) throws AlgebricksException {
         ProcedureSearchKey procedureSearchKey = new ProcedureSearchKey(dataverseName, procedureName, arity);
         List<Procedure> procedures = MetadataManager.INSTANCE.getEntities(mdTxnCtx, procedureSearchKey);
@@ -106,7 +107,7 @@ public class BADLangExtension implements ILangExtension {
         }
     }
 
-    public static List<Broker> getBrokers(MetadataTransactionContext mdTxnCtx, String dataverseName)
+    public static List<Broker> getBrokers(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName)
             throws AlgebricksException {
         DataverseBrokersSearchKey brokerSearchKey = new DataverseBrokersSearchKey(dataverseName);
         return MetadataManager.INSTANCE.getEntities(mdTxnCtx, brokerSearchKey);
@@ -117,13 +118,13 @@ public class BADLangExtension implements ILangExtension {
         return MetadataManager.INSTANCE.getEntities(mdTxnCtx, channelSearchKey);
     }
 
-    public static List<Channel> getChannels(MetadataTransactionContext mdTxnCtx, String dataverseName)
+    public static List<Channel> getChannels(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName)
             throws AlgebricksException {
         DataverseChannelsSearchKey channelSearchKey = new DataverseChannelsSearchKey(dataverseName);
         return MetadataManager.INSTANCE.getEntities(mdTxnCtx, channelSearchKey);
     }
 
-    public static List<Procedure> getProcedures(MetadataTransactionContext mdTxnCtx, String dataverseName)
+    public static List<Procedure> getProcedures(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName)
             throws AlgebricksException {
         DataverseProceduresSearchKey proceduresSearchKey = new DataverseProceduresSearchKey(dataverseName);
         return MetadataManager.INSTANCE.getEntities(mdTxnCtx, proceduresSearchKey);

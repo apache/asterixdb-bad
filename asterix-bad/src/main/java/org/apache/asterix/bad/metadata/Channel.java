@@ -16,21 +16,22 @@
 package org.apache.asterix.bad.metadata;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 
 /**
  * Metadata describing a channel.
  */
 public class Channel implements IExtensionMetadataEntity {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /** A unique identifier for the channel */
     protected final EntityId channelId;
@@ -39,35 +40,37 @@ public class Channel implements IExtensionMetadataEntity {
     private final String duration;
     private final String channelBody;
     private final FunctionSignature function;
-    private final List<String> functionAsPath;
+    private final Triple<DataverseName, String, String> functionAsPath;
     /*
     Dependencies are stored as an array of size two:
     element 0 is a list of dataset dependencies
-    -stored as lists of [DataverseName, Dataset] for the datasets
+    -stored as triples of [DataverseName, Dataset, null] for the datasets
     element 1 is a list of function dependencies
-    -stored as lists of [DataverseName, FunctionName, Arity] for the functions
+    -stored as triples of [DataverseName, FunctionName, Arity] for the functions
     */
-    private final List<List<List<String>>> dependencies;
+    private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
-    public Channel(String dataverseName, String channelName, String subscriptionsDataset, String resultsDataset,
-            FunctionSignature function, String duration, List<List<List<String>>> dependencies, String channelBody) {
+    public Channel(DataverseName dataverseName, String channelName, String subscriptionsDataset, String resultsDataset,
+            FunctionSignature function, String duration, List<List<Triple<DataverseName, String, String>>> dependencies,
+            String channelBody) {
         this.channelId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, dataverseName, channelName);
         this.function = function;
         this.duration = duration;
         this.resultsDatasetName = resultsDataset;
         this.subscriptionsDatasetName = subscriptionsDataset;
         this.channelBody = channelBody;
-        if (this.function.getNamespace() == null) {
-            this.function.setNamespace(dataverseName);
+        if (this.function.getDataverseName() == null) {
+            this.function.setDataverseName(dataverseName);
         }
-        functionAsPath = Arrays.asList(this.function.getNamespace(), this.function.getName(),
+        functionAsPath = new Triple<>(this.function.getDataverseName(), this.function.getName(),
                 Integer.toString(this.function.getArity()));
         if (dependencies == null) {
             this.dependencies = new ArrayList<>();
             this.dependencies.add(new ArrayList<>());
             this.dependencies.add(new ArrayList<>());
-            List<String> resultsList = Arrays.asList(dataverseName, resultsDatasetName);
-            List<String> subscriptionList = Arrays.asList(dataverseName, subscriptionsDatasetName);
+            Triple<DataverseName, String, String> resultsList = new Triple<>(dataverseName, resultsDatasetName, null);
+            Triple<DataverseName, String, String> subscriptionList =
+                    new Triple<>(dataverseName, subscriptionsDatasetName, null);
             this.dependencies.get(0).add(resultsList);
             this.dependencies.get(0).add(subscriptionList);
             this.dependencies.get(1).add(functionAsPath);
@@ -80,7 +83,7 @@ public class Channel implements IExtensionMetadataEntity {
         return channelId;
     }
 
-    public List<List<List<String>>> getDependencies() {
+    public List<List<Triple<DataverseName, String, String>>> getDependencies() {
         return dependencies;
     }
 
@@ -100,7 +103,7 @@ public class Channel implements IExtensionMetadataEntity {
         return channelBody;
     }
 
-    public List<String> getFunctionAsPath() {
+    public Triple<DataverseName, String, String> getFunctionAsPath() {
         return functionAsPath;
     }
 

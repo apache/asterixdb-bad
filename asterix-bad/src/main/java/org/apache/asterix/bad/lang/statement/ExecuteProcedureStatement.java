@@ -37,10 +37,10 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -60,19 +60,20 @@ public class ExecuteProcedureStatement extends ExtensionStatement {
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-procedure";
 
-    private final String dataverseName;
+    private final DataverseName dataverseName;
     private final String procedureName;
     private final int arity;
     private final List<Expression> argList;
 
-    public ExecuteProcedureStatement(String dataverseName, String procedureName, int arity, List<Expression> argList) {
+    public ExecuteProcedureStatement(DataverseName dataverseName, String procedureName, int arity,
+            List<Expression> argList) {
         this.dataverseName = dataverseName;
         this.procedureName = procedureName;
         this.arity = arity;
         this.argList = argList;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -101,7 +102,7 @@ public class ExecuteProcedureStatement extends ExtensionStatement {
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
-        String dataverse = ((QueryTranslator) statementExecutor).getActiveDataverse(new Identifier(dataverseName));
+        DataverseName dataverse = statementExecutor.getActiveDataverseName(dataverseName);
         boolean txnActive = false;
         EntityId entityId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverse, procedureName);
         DeployedJobSpecEventListener listener = (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);

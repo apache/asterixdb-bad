@@ -33,7 +33,7 @@ import org.apache.asterix.bad.metadata.Procedure;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -82,11 +82,10 @@ public class ProcedureDropStatement extends ExtensionStatement {
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         FunctionSignature signature = getFunctionSignature();
-        String dataverse =
-                ((QueryTranslator) statementExecutor).getActiveDataverse(new Identifier(signature.getNamespace()));
-        signature.setNamespace(dataverse);
+        DataverseName dataverseName = statementExecutor.getActiveDataverseName(signature.getDataverseName());
+        signature.setDataverseName(dataverseName);
         boolean txnActive = false;
-        EntityId entityId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverse, signature.getName());
+        EntityId entityId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverseName, signature.getName());
         DeployedJobSpecEventListener listener = (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);
 
         if (listener.isActive()) {
@@ -100,7 +99,7 @@ public class ProcedureDropStatement extends ExtensionStatement {
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             txnActive = true;
-            procedure = BADLangExtension.getProcedure(mdTxnCtx, dataverse, signature.getName(),
+            procedure = BADLangExtension.getProcedure(mdTxnCtx, dataverseName, signature.getName(),
                     Integer.toString(signature.getArity()));
             txnActive = false;
             if (procedure == null) {
@@ -116,7 +115,7 @@ public class ProcedureDropStatement extends ExtensionStatement {
                 //TODO: Channels need to better handle cluster failures
                 LOGGER.log(Level.SEVERE,
                         "Tried to drop a Deployed Job  whose listener no longer exists:  " + entityId.getExtensionName()
-                                + " " + entityId.getDataverse() + "." + entityId.getEntityName() + ".");
+                                + " " + entityId.getDataverseName() + "." + entityId.getEntityName() + ".");
             } else {
                 if (listener.getExecutorService() != null) {
                     listener.getExecutorService().shutdown();
@@ -124,7 +123,7 @@ public class ProcedureDropStatement extends ExtensionStatement {
                             TimeUnit.SECONDS)) {
                         LOGGER.log(Level.SEVERE,
                                 "Executor Service is terminating non-gracefully for: " + entityId.getExtensionName()
-                                        + " " + entityId.getDataverse() + "." + entityId.getEntityName());
+                                        + " " + entityId.getDataverseName() + "." + entityId.getEntityName());
                     }
                 }
                 DeployedJobSpecId deployedJobSpecId = listener.getDeployedJobSpecId();

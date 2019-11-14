@@ -26,6 +26,7 @@ import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.lang.BADLangExtension;
 import org.apache.asterix.bad.metadata.Broker;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.MetadataManager;
@@ -40,11 +41,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class CreateBrokerStatement extends ExtensionStatement {
 
     private static final Logger LOGGER = Logger.getLogger(CreateBrokerStatement.class.getName());
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier brokerName;
     private String endPointName;
 
-    public CreateBrokerStatement(Identifier dataverseName, Identifier brokerName, String endPointName) {
+    public CreateBrokerStatement(DataverseName dataverseName, Identifier brokerName, String endPointName) {
         this.brokerName = brokerName;
         this.dataverseName = dataverseName;
         this.endPointName = endPointName;
@@ -54,7 +55,7 @@ public class CreateBrokerStatement extends ExtensionStatement {
         return endPointName;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -76,7 +77,7 @@ public class CreateBrokerStatement extends ExtensionStatement {
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {
-        String dataverse = ((QueryTranslator) statementExecutor).getActiveDataverse(dataverseName);
+        DataverseName dataverse = statementExecutor.getActiveDataverseName(dataverseName);
         MetadataTransactionContext mdTxnCtx = null;
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();

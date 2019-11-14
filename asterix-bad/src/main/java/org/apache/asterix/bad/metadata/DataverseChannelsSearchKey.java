@@ -18,16 +18,17 @@
  */
 package org.apache.asterix.bad.metadata;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataSearchKey;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class DataverseChannelsSearchKey implements IExtensionMetadataSearchKey {
-    private static final long serialVersionUID = 1L;
-    private final String dataverse;
+    private static final long serialVersionUID = 2L;
+    private final DataverseName dataverse;
 
-    public DataverseChannelsSearchKey(String dataverse) {
+    public DataverseChannelsSearchKey(DataverseName dataverse) {
         this.dataverse = dataverse;
     }
 

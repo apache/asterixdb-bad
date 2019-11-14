@@ -138,7 +138,7 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
             listener.setExecutorService(ses);
             metadataProvider.getLocks().unlock();
 
-            LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverse() + "."
+            LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverseName() + "."
                     + entityId.getEntityName() + " was stopped by cluster failure. It has restarted.");
 
         }
@@ -164,7 +164,7 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
                     true);
             metadataProvider.getLocks().unlock();
             //Log that the procedure stopped by cluster restart. Procedure is available again now.
-            LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverse() + "."
+            LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverseName() + "."
                     + entityId.getEntityName()
                     + " was lost with cluster failure and any repetitive instances have stopped. It is now available to run again.");
             //TODO: allow repetitive procedures to restart execution automatically

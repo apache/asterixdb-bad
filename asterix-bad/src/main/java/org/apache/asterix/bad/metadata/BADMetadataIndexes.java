@@ -24,6 +24,7 @@ import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.metadata.api.ExtensionMetadataDataset;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
+import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslatorFactory;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -55,28 +56,26 @@ public class BADMetadataIndexes {
     public static final int NUM_FIELDS_BROKER_IDX = 3;
     public static final int NUM_FIELDS_PROCEDURE_IDX = 4;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static final ExtensionMetadataDataset CHANNEL_DATASET = new ExtensionMetadataDataset(PROPERTIES_CHANNEL,
+    public static final ExtensionMetadataDataset CHANNEL_DATASET = new ExtensionMetadataDataset<>(PROPERTIES_CHANNEL,
             NUM_FIELDS_CHANNEL_IDX, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
             Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
                     Arrays.asList(BADConstants.ChannelName)),
             0, BADMetadataRecordTypes.CHANNEL_RECORDTYPE, true, new int[] { 0, 1 }, BAD_CHANNEL_INDEX_ID,
-            () -> new ChannelTupleTranslator(true));
+            (IMetadataEntityTupleTranslatorFactory<Channel>) ChannelTupleTranslator::new);
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static final ExtensionMetadataDataset BROKER_DATASET = new ExtensionMetadataDataset(PROPERTIES_BROKER,
+    public static final ExtensionMetadataDataset BROKER_DATASET = new ExtensionMetadataDataset<>(PROPERTIES_BROKER,
             NUM_FIELDS_BROKER_IDX, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
             Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
                     Arrays.asList(BADConstants.BrokerName)),
             0, BADMetadataRecordTypes.BROKER_RECORDTYPE, true, new int[] { 0, 1 }, BAD_BROKER_INDEX_ID,
-            () -> new BrokerTupleTranslator(true));
+            (IMetadataEntityTupleTranslatorFactory<Broker>) BrokerTupleTranslator::new);
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static final ExtensionMetadataDataset PROCEDURE_DATASET = new ExtensionMetadataDataset(PROPERTIES_PROCEDURE,
-            NUM_FIELDS_PROCEDURE_IDX, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(BADConstants.ProcedureName), Arrays.asList(BADConstants.FIELD_NAME_ARITY)),
-            0, BADMetadataRecordTypes.PROCEDURE_RECORDTYPE, true, new int[] { 0, 1, 2 }, BAD_PROCEDURE_INDEX_ID,
-            () -> new ProcedureTupleTranslator(true));
+    public static final ExtensionMetadataDataset PROCEDURE_DATASET =
+            new ExtensionMetadataDataset<>(PROPERTIES_PROCEDURE, NUM_FIELDS_PROCEDURE_IDX,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
+                            Arrays.asList(BADConstants.ProcedureName), Arrays.asList(BADConstants.FIELD_NAME_ARITY)),
+                    0, BADMetadataRecordTypes.PROCEDURE_RECORDTYPE, true, new int[] { 0, 1, 2 }, BAD_PROCEDURE_INDEX_ID,
+                    (IMetadataEntityTupleTranslatorFactory<Procedure>) ProcedureTupleTranslator::new);
 
 }

@@ -121,9 +121,9 @@ public class NotifyBrokerRuntime extends AbstractOneInputOneOutputOneFramePushRu
         if (push) {
             resultTitle = "\"results\"";
         }
-        String jsonStr = "{ \"dataverseName\":\"" + entityId.getDataverse() + "\", \"channelName\":\""
-                + entityId.getEntityName() + "\", \"" + BADConstants.ChannelExecutionTime + "\":\""
-                + executionTimeString + "\", " + resultTitle + ":[";
+        String jsonStr = "{ \"dataverseName\":\"" + entityId.getDataverseName().getCanonicalForm()
+                + "\", \"channelName\":\"" + entityId.getEntityName() + "\", \"" + BADConstants.ChannelExecutionTime
+                + "\":\"" + executionTimeString + "\", " + resultTitle + ":[";
         jsonStr += sendData.get(endpoint);
         jsonStr = jsonStr.substring(0, jsonStr.length());
         jsonStr += "]}";

@@ -45,6 +45,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -59,10 +60,12 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
@@ -82,15 +85,14 @@ public class CreateChannelStatement extends ExtensionStatement {
     private final Identifier channelName;
     private final FunctionSignature function;
     private final CallExpr period;
-    private Identifier dataverseName;
+    private DataverseName dataverseName;
     private String duration;
     private String body;
     private String subscriptionsTableName;
     private String resultsTableName;
-    private String dataverse;
     private final boolean push;
 
-    public CreateChannelStatement(Identifier dataverseName, Identifier channelName, FunctionSignature function,
+    public CreateChannelStatement(DataverseName dataverseName, Identifier channelName, FunctionSignature function,
             Expression period, boolean push) {
         this.channelName = channelName;
         this.dataverseName = dataverseName;
@@ -100,7 +102,7 @@ public class CreateChannelStatement extends ExtensionStatement {
         this.push = push;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -169,7 +171,7 @@ public class CreateChannelStatement extends ExtensionStatement {
         partitionFields.add(fieldNames);
         IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null);
         DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseName, new Identifier(subscriptionsTableName),
-                new Identifier(BADConstants.BAD_DATAVERSE_NAME), subscriptionsTypeName, null, null, null,
+                MetadataConstants.METADATA_DATAVERSE_NAME, subscriptionsTypeName, null, null, null,
                 new HashMap<String, String>(), DatasetType.INTERNAL, idd, null, true);
 
         ((QueryTranslator) statementExecutor).handleCreateDatasetStatement(metadataProvider, createSubscriptionsDataset,
@@ -183,7 +185,7 @@ public class CreateChannelStatement extends ExtensionStatement {
             partitionFields.add(fieldNames);
             idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null);
             DatasetDecl createResultsDataset = new DatasetDecl(dataverseName, new Identifier(resultsTableName),
-                    new Identifier(BADConstants.BAD_DATAVERSE_NAME), resultsTypeName, null, null, null, new HashMap<>(),
+                    MetadataConstants.METADATA_DATAVERSE_NAME, resultsTypeName, null, null, null, new HashMap<>(),
                     DatasetType.INTERNAL, idd, null, true);
 
             //Create an index on timestamp for results
@@ -216,6 +218,7 @@ public class CreateChannelStatement extends ExtensionStatement {
     private JobSpecification createChannelJob(IStatementExecutor statementExecutor, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc, IResultSet resultSet, Stats stats) throws Exception {
         StringBuilder builder = new StringBuilder();
+        CharSequence dataverse = SqlppStatementUtil.encloseDataverseName(new StringBuilder(), dataverseName);
         builder.append("SET inline_with \"false\";\n");
         if (!push) {
             builder.append("insert into " + dataverse + "." + resultsTableName);
@@ -227,8 +230,9 @@ public class CreateChannelStatement extends ExtensionStatement {
         builder.append("sub." + BADConstants.SubscriptionId + " as " + BADConstants.SubscriptionId + ",");
         builder.append("current_datetime() as " + BADConstants.DeliveryTime + "\n");
         builder.append("from " + dataverse + "." + subscriptionsTableName + " sub,\n");
-        builder.append(BADConstants.BAD_DATAVERSE_NAME + "." + BADConstants.BROKER_KEYWORD + " b, \n");
-        builder.append(function.getNamespace() + "." + function.getName() + "(");
+        builder.append(MetadataConstants.METADATA_DATAVERSE_NAME + "." + BADConstants.BROKER_KEYWORD + " b, \n");
+        //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
+        builder.append(function.getDataverseName().getCanonicalForm() + "." + function.getName() + "(");
         int i = 0;
         for (; i < function.getArity() - 1; i++) {
             builder.append("sub.param" + i + ",");
@@ -266,12 +270,11 @@ public class CreateChannelStatement extends ExtensionStatement {
 
         //TODO: Figure out how to handle when a subset of the 3 tasks fails
 
-        dataverseName = new Identifier(((QueryTranslator) statementExecutor).getActiveDataverse(dataverseName));
-        dataverse = dataverseName.getValue();
+        dataverseName = statementExecutor.getActiveDataverseName(dataverseName);
         subscriptionsTableName = channelName + BADConstants.subscriptionEnding;
         resultsTableName = push ? "" : channelName + BADConstants.resultsEnding;
 
-        EntityId entityId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, dataverse, channelName.getValue());
+        EntityId entityId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, dataverseName, channelName.getValue());
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
@@ -283,7 +286,7 @@ public class CreateChannelStatement extends ExtensionStatement {
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            channel = BADLangExtension.getChannel(mdTxnCtx, dataverse, channelName.getValue());
+            channel = BADLangExtension.getChannel(mdTxnCtx, dataverseName, channelName.getValue());
             if (channel != null) {
                 throw new AlgebricksException("A channel with this name " + channelName + " already exists.");
             }
@@ -296,10 +299,10 @@ public class CreateChannelStatement extends ExtensionStatement {
             initialize(mdTxnCtx);
 
             //check if names are available before creating anything
-            if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, subscriptionsTableName) != null) {
+            if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, subscriptionsTableName) != null) {
                 throw new AsterixException("The channel name:" + channelName + " is not available.");
             }
-            if (!push && MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverse, resultsTableName) != null) {
+            if (!push && MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, resultsTableName) != null) {
                 throw new AsterixException("The channel name:" + channelName + " is not available.");
             }
             MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getApplicationContext(),
@@ -323,8 +326,8 @@ public class CreateChannelStatement extends ExtensionStatement {
 
             BADJobService.setupExecutorJob(entityId, channeljobSpec, hcc, listener, metadataProvider.getTxnIdFactory(),
                     duration);
-            channel = new Channel(dataverse, channelName.getValue(), subscriptionsTableName, resultsTableName, function,
-                    duration, null, body);
+            channel = new Channel(dataverseName, channelName.getValue(), subscriptionsTableName, resultsTableName,
+                    function, duration, null, body);
 
             MetadataManager.INSTANCE.addEntity(mdTxnCtx, channel);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

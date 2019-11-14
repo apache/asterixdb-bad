@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.bad;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 public interface BADConstants {
     String SubscriptionId = "subscriptionId";
     String BrokerName = "BrokerName";
@@ -41,7 +43,6 @@ public interface BADConstants {
     String subscriptionEnding = "Subscriptions";
     String resultsEnding = "Results";
     String BAD_METADATA_EXTENSION_NAME = "BADMetadataExtension";
-    String BAD_DATAVERSE_NAME = "Metadata";
     String Duration = "Duration";
     String Function = "Function";
     String FIELD_NAME_ARITY = "Arity";

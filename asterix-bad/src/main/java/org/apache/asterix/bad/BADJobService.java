@@ -99,7 +99,7 @@ public class BADJobService {
                     }
                 } catch (Exception e) {
                     LOGGER.log(Level.SEVERE, "Job Failed to run for " + entityId.getExtensionName() + " "
-                            + entityId.getDataverse() + "." + entityId.getEntityName() + ".", e);
+                            + entityId.getDataverseName() + "." + entityId.getEntityName() + ".", e);
                 }
             }
         }, period, period, TimeUnit.MILLISECONDS);
@@ -113,7 +113,7 @@ public class BADJobService {
                 null, listener, null);
         if (executionMilliseconds > period) {
             LOGGER.log(Level.SEVERE,
-                    "Periodic job for " + entityId.getExtensionName() + " " + entityId.getDataverse() + "."
+                    "Periodic job for " + entityId.getExtensionName() + " " + entityId.getDataverseName() + "."
                             + entityId.getEntityName() + " was unable to meet the required period of " + period
                             + " milliseconds. Actually took " + executionMilliseconds + " execution will shutdown"
                             + new Date());
@@ -147,8 +147,9 @@ public class BADJobService {
         }
 
         LOGGER.log(Level.SEVERE,
-                "Deployed Job execution completed for " + entityId.getExtensionName() + " " + entityId.getDataverse()
-                        + "." + entityId.getEntityName() + ". Took " + executionMilliseconds + " milliseconds ");
+                "Deployed Job execution completed for " + entityId.getExtensionName() + " "
+                        + entityId.getDataverseName() + "." + entityId.getEntityName() + ". Took "
+                        + executionMilliseconds + " milliseconds ");
 
         return executionMilliseconds;
 
@@ -282,7 +283,7 @@ public class BADJobService {
         } else if (procedureStatement.getKind() == Statement.Kind.QUERY) {
             return compileQueryJob(statementExecutor, metadataProvider, hcc, (Query) procedureStatement);
         } else {
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor();
+            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
             procedureStatement.accept(visitor, null);
             return ((QueryTranslator) statementExecutor).handleDeleteStatement(metadataProvider, procedureStatement,
                     hcc, true, null, null);

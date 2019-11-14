@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -44,21 +45,21 @@ public class BADMetadataExtension implements IMetadataExtension {
 
     public static final ExtensionId BAD_METADATA_EXTENSION_ID =
             new ExtensionId(BADConstants.BAD_METADATA_EXTENSION_NAME, 0);
-    public static final Dataverse BAD_DATAVERSE = new Dataverse(BADConstants.BAD_DATAVERSE_NAME,
+    public static final Dataverse BAD_DATAVERSE = new Dataverse(MetadataConstants.METADATA_DATAVERSE_NAME,
             NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
 
-    public static final Datatype BAD_SUBSCRIPTION_DATATYPE = new Datatype(BADConstants.BAD_DATAVERSE_NAME,
+    public static final Datatype BAD_SUBSCRIPTION_DATATYPE = new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
             BADConstants.ChannelSubscriptionsType, BADMetadataRecordTypes.channelSubscriptionsType, false);
-    public static final Datatype BAD_RESULT_DATATYPE = new Datatype(BADConstants.BAD_DATAVERSE_NAME,
+    public static final Datatype BAD_RESULT_DATATYPE = new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
             BADConstants.ChannelResultsType, BADMetadataRecordTypes.channelResultsType, false);
 
-    public static final Datatype BAD_BROKER_DATATYPE = new Datatype(BADConstants.BAD_DATAVERSE_NAME,
+    public static final Datatype BAD_BROKER_DATATYPE = new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
             BADConstants.RECORD_TYPENAME_BROKER, BADMetadataRecordTypes.BROKER_RECORDTYPE, false);
 
-    public static final Datatype BAD_CHANNEL_DATATYPE = new Datatype(BADConstants.BAD_DATAVERSE_NAME,
+    public static final Datatype BAD_CHANNEL_DATATYPE = new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
             BADConstants.RECORD_TYPENAME_CHANNEL, BADMetadataRecordTypes.CHANNEL_RECORDTYPE, false);
 
-    public static final Datatype BAD_PROCEDURE_DATATYPE = new Datatype(BADConstants.BAD_DATAVERSE_NAME,
+    public static final Datatype BAD_PROCEDURE_DATATYPE = new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
             BADConstants.RECORD_TYPENAME_PROCEDURE, BADMetadataRecordTypes.PROCEDURE_RECORDTYPE, false);
 
     @Override

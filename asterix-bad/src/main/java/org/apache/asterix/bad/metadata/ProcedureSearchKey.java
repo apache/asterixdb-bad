@@ -18,18 +18,19 @@
  */
 package org.apache.asterix.bad.metadata;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataSearchKey;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class ProcedureSearchKey implements IExtensionMetadataSearchKey {
-    private static final long serialVersionUID = 1L;
-    private final String dataverse;
+    private static final long serialVersionUID = 2L;
+    private final DataverseName dataverse;
     private final String channel;
     private final String arity;
 
-    public ProcedureSearchKey(String dataverse, String channel, String arity) {
+    public ProcedureSearchKey(DataverseName dataverse, String channel, String arity) {
         this.dataverse = dataverse;
         this.channel = channel;
         this.arity = arity;

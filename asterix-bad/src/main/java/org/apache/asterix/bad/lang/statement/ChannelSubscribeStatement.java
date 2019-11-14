@@ -30,6 +30,7 @@ import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
@@ -61,16 +62,16 @@ import org.apache.hyracks.api.result.ResultSetId;
 
 public class ChannelSubscribeStatement extends ExtensionStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier channelName;
-    private final Identifier brokerDataverseName;
+    private final DataverseName brokerDataverseName;
     private final Identifier brokerName;
     private final List<Expression> argList;
     private final String subscriptionId;
     private final int varCounter;
 
-    public ChannelSubscribeStatement(Identifier dataverseName, Identifier channelName, List<Expression> argList,
-            int varCounter, Identifier brokerDataverseName, Identifier brokerName, String subscriptionId) {
+    public ChannelSubscribeStatement(DataverseName dataverseName, Identifier channelName, List<Expression> argList,
+            int varCounter, DataverseName brokerDataverseName, Identifier brokerName, String subscriptionId) {
         this.channelName = channelName;
         this.dataverseName = dataverseName;
         this.brokerDataverseName = brokerDataverseName;
@@ -80,11 +81,11 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
         this.varCounter = varCounter;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public Identifier getBrokerDataverseName() {
+    public DataverseName getBrokerDataverseName() {
         return brokerDataverseName;
     }
 
@@ -122,8 +123,8 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {
-        String dataverse = ((QueryTranslator) statementExecutor).getActiveDataverse(dataverseName);
-        String brokerDataverse = ((QueryTranslator) statementExecutor).getActiveDataverse(brokerDataverseName);
+        DataverseName dataverse = statementExecutor.getActiveDataverseName(dataverseName);
+        DataverseName brokerDataverse = statementExecutor.getActiveDataverseName(brokerDataverseName);
 
         MetadataTransactionContext mdTxnCtx = null;
         try {
@@ -149,7 +150,7 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
 
             List<FieldBinding> fb = new ArrayList<>();
             LiteralExpr leftExpr = new LiteralExpr(new StringLiteral(BADConstants.DataverseName));
-            Expression rightExpr = new LiteralExpr(new StringLiteral(brokerDataverse));
+            Expression rightExpr = new LiteralExpr(new StringLiteral(brokerDataverse.getCanonicalForm()));
             fb.add(new FieldBinding(leftExpr, rightExpr));
 
             leftExpr = new LiteralExpr(new StringLiteral(BADConstants.BrokerName));
@@ -162,8 +163,7 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
                 List<Expression> UUIDList = new ArrayList<>();
                 UUIDList.add(new LiteralExpr(new StringLiteral(subscriptionId)));
                 FunctionIdentifier function = BuiltinFunctions.UUID_CONSTRUCTOR;
-                FunctionSignature UUIDfunc =
-                        new FunctionSignature(function.getNamespace(), function.getName(), function.getArity());
+                FunctionSignature UUIDfunc = new FunctionSignature(function);
                 CallExpr UUIDCall = new CallExpr(UUIDfunc, UUIDList);
 
                 rightExpr = UUIDCall;
@@ -204,14 +204,14 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
                 tempMdProvider.setOutputFile(metadataProvider.getOutputFile());
                 tempMdProvider.setMaxResultReads(requestParameters.getResultProperties().getMaxReads());
 
-                InsertStatement insert = new InsertStatement(new Identifier(dataverse),
-                        new Identifier(subscriptionsDatasetName), subscriptionTuple, varCounter, resultVar, accessor);
+                InsertStatement insert = new InsertStatement(dataverse, new Identifier(subscriptionsDatasetName),
+                        subscriptionTuple, varCounter, resultVar, accessor);
                 ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, insert, hcc,
                         resultSet, resultDelivery, null, stats, false, requestParameters, null, null);
             } else {
                 //To update an existing subscription
-                UpsertStatement upsert = new UpsertStatement(new Identifier(dataverse),
-                        new Identifier(subscriptionsDatasetName), subscriptionTuple, varCounter, null, null);
+                UpsertStatement upsert = new UpsertStatement(dataverse, new Identifier(subscriptionsDatasetName),
+                        subscriptionTuple, varCounter, null, null);
                 ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, upsert, hcc,
                         resultSet, resultDelivery, null, stats, false, requestParameters, null, null);
             }

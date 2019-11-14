@@ -15,6 +15,7 @@
 
 package org.apache.asterix.bad.metadata;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
 
@@ -23,19 +24,19 @@ import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
  */
 public class Broker implements IExtensionMetadataEntity {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private final String dataverseName;
+    private final DataverseName dataverseName;
     private final String brokerName;
     private final String endPointName;
 
-    public Broker(String dataverseName, String brokerName, String endPointName) {
+    public Broker(DataverseName dataverseName, String brokerName, String endPointName) {
         this.endPointName = endPointName;
         this.dataverseName = dataverseName;
         this.brokerName = brokerName;
     }
 
-    public String getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 

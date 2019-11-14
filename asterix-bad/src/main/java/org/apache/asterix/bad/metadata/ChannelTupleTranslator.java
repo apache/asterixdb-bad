@@ -15,16 +15,13 @@
 
 package org.apache.asterix.bad.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -32,7 +29,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -50,35 +47,23 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
     // Payload field containing serialized feed.
     public static final int CHANNEL_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
-    private ISerializerDeserializer<ARecord> recordSerDes = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BADMetadataRecordTypes.CHANNEL_RECORDTYPE);
-
     private transient OrderedListBuilder dependenciesListBuilder = new OrderedListBuilder();
     private transient OrderedListBuilder dependencyListBuilder = new OrderedListBuilder();
     private transient OrderedListBuilder dependencyNameListBuilder = new OrderedListBuilder();
+    private transient List<String> dependencySubnames = new ArrayList<>();
     private transient AOrderedListType stringList = new AOrderedListType(BuiltinType.ASTRING, null);
     private transient AOrderedListType ListofLists =
             new AOrderedListType(new AOrderedListType(BuiltinType.ASTRING, null), null);
 
     public ChannelTupleTranslator(boolean getTuple) {
-        super(getTuple, BADMetadataIndexes.NUM_FIELDS_CHANNEL_IDX);
+        super(getTuple, BADMetadataIndexes.CHANNEL_DATASET, CHANNEL_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public Channel getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(CHANNEL_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(CHANNEL_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(CHANNEL_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord channelRecord = recordSerDes.deserialize(in);
-        return createChannelFromARecord(channelRecord);
-    }
-
-    private Channel createChannelFromARecord(ARecord channelRecord) {
-        Channel channel = null;
-        String dataverseName = ((AString) channelRecord
+    protected Channel createMetadataEntityFromARecord(ARecord channelRecord) {
+        String dataverseCanonicalName = ((AString) channelRecord
                 .getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_DATAVERSE_NAME_FIELD_INDEX)).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String channelName =
                 ((AString) channelRecord.getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_CHANNEL_NAME_FIELD_INDEX))
                         .getStringValue();
@@ -88,12 +73,9 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
                 ((AString) channelRecord.getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_RESULTS_NAME_FIELD_INDEX))
                         .getStringValue();
 
-        IACursor cursor = ((AOrderedList) channelRecord
-                .getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_FUNCTION_FIELD_INDEX)).getCursor();
-        List<String> functionSignature = new ArrayList<>();
-        while (cursor.next()) {
-            functionSignature.add(((AString) cursor.get()).getStringValue());
-        }
+        AOrderedList function = ((AOrderedList) channelRecord
+                .getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_FUNCTION_FIELD_INDEX));
+        Triple<DataverseName, String, String> functionSignature = ProcedureTupleTranslator.getDependency(function);
 
         String duration =
                 ((AString) channelRecord.getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_DURATION_FIELD_INDEX))
@@ -101,46 +83,37 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
 
         IACursor dependenciesCursor = ((AOrderedList) channelRecord
                 .getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_DEPENDENCIES_FIELD_INDEX)).getCursor();
-        List<List<List<String>>> dependencies = new ArrayList<>();
-        AOrderedList dependencyList;
-        AOrderedList qualifiedList;
-        int i = 0;
+        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>();
         while (dependenciesCursor.next()) {
-            dependencies.add(new ArrayList<>());
-            dependencyList = (AOrderedList) dependenciesCursor.get();
-            IACursor qualifiedDependencyCursor = dependencyList.getCursor();
-            int j = 0;
+            List<Triple<DataverseName, String, String>> dependencyList = new ArrayList<>();
+            IACursor qualifiedDependencyCursor = ((AOrderedList) dependenciesCursor.get()).getCursor();
             while (qualifiedDependencyCursor.next()) {
-                qualifiedList = (AOrderedList) qualifiedDependencyCursor.get();
-                IACursor qualifiedNameCursor = qualifiedList.getCursor();
-                dependencies.get(i).add(new ArrayList<>());
-                while (qualifiedNameCursor.next()) {
-                    dependencies.get(i).get(j).add(((AString) qualifiedNameCursor.get()).getStringValue());
-                }
-                j++;
+                Triple<DataverseName, String, String> dependency =
+                        ProcedureTupleTranslator.getDependency((AOrderedList) qualifiedDependencyCursor.get());
+                dependencyList.add(dependency);
             }
-            i++;
-
+            dependencies.add(dependencyList);
         }
 
         String channelBody =
                 ((AString) channelRecord.getValueByPos(BADMetadataRecordTypes.CHANNEL_ARECORD_BODY_FIELD_INDEX))
                         .getStringValue();
 
-        FunctionSignature signature = new FunctionSignature(functionSignature.get(0), functionSignature.get(1),
-                Integer.parseInt(functionSignature.get(2)));
+        FunctionSignature signature = new FunctionSignature(functionSignature.first, functionSignature.second,
+                Integer.parseInt(functionSignature.third));
 
-        channel = new Channel(dataverseName, channelName, subscriptionsName, resultsName, signature, duration,
+        return new Channel(dataverseName, channelName, subscriptionsName, resultsName, signature, duration,
                 dependencies, channelBody);
-        return channel;
     }
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(Channel channel) throws HyracksDataException, MetadataException {
-        // write the key in the first fields of the tuple
+        String dataverseCanonicalName = channel.getChannelId().getDataverseName().getCanonicalForm();
 
+        // write the key in the first fields of the tuple
         tupleBuilder.reset();
-        aString.setValue(channel.getChannelId().getDataverse());
+
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -152,7 +125,7 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(channel.getChannelId().getDataverse());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.CHANNEL_ARECORD_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
 
@@ -178,7 +151,8 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset(stringList);
-        for (String pathPart : channel.getFunctionAsPath()) {
+        ProcedureTupleTranslator.getDependencySubNames(channel.getFunctionAsPath(), dependencySubnames);
+        for (String pathPart : dependencySubnames) {
             itemValue.reset();
             aString.setValue(pathPart);
             stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -197,12 +171,13 @@ public class ChannelTupleTranslator extends AbstractTupleTranslator<Channel> {
         // write field 6
         dependenciesListBuilder.reset((AOrderedListType) BADMetadataRecordTypes.CHANNEL_RECORDTYPE
                 .getFieldTypes()[BADMetadataRecordTypes.CHANNEL_ARECORD_DEPENDENCIES_FIELD_INDEX]);
-        List<List<List<String>>> dependenciesList = channel.getDependencies();
-        for (List<List<String>> dependencies : dependenciesList) {
+        List<List<Triple<DataverseName, String, String>>> dependenciesList = channel.getDependencies();
+        for (List<Triple<DataverseName, String, String>> dependencies : dependenciesList) {
             dependencyListBuilder.reset(ListofLists);
-            for (List<String> dependency : dependencies) {
+            for (Triple<DataverseName, String, String> dependency : dependencies) {
                 dependencyNameListBuilder.reset(stringList);
-                for (String subName : dependency) {
+                ProcedureTupleTranslator.getDependencySubNames(dependency, dependencySubnames);
+                for (String subName : dependencySubnames) {
                     itemValue.reset();
                     aString.setValue(subName);
                     stringSerde.serialize(aString, itemValue.getDataOutput());

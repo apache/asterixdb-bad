@@ -29,6 +29,7 @@ import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
@@ -53,13 +54,13 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ChannelUnsubscribeStatement extends ExtensionStatement {
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier channelName;
     private final String subscriptionId;
     private final int varCounter;
     private VariableExpr vars;
 
-    public ChannelUnsubscribeStatement(VariableExpr vars, Identifier dataverseName, Identifier channelName,
+    public ChannelUnsubscribeStatement(VariableExpr vars, DataverseName dataverseName, Identifier channelName,
             String subscriptionId, int varCounter) {
         this.vars = vars;
         this.channelName = channelName;
@@ -68,7 +69,7 @@ public class ChannelUnsubscribeStatement extends ExtensionStatement {
         this.varCounter = varCounter;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -102,7 +103,7 @@ public class ChannelUnsubscribeStatement extends ExtensionStatement {
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {
-        String dataverse = ((QueryTranslator) statementExecutor).getActiveDataverse(dataverseName);
+        DataverseName dataverse = statementExecutor.getActiveDataverseName(dataverseName);
 
         MetadataTransactionContext mdTxnCtx = null;
         try {
@@ -126,15 +127,14 @@ public class ChannelUnsubscribeStatement extends ExtensionStatement {
             UUIDList.add(new LiteralExpr(new StringLiteral(subscriptionId)));
 
             FunctionIdentifier function = BuiltinFunctions.UUID_CONSTRUCTOR;
-            FunctionSignature UUIDfunc =
-                    new FunctionSignature(function.getNamespace(), function.getName(), function.getArity());
+            FunctionSignature UUIDfunc = new FunctionSignature(function);
             CallExpr UUIDCall = new CallExpr(UUIDfunc, UUIDList);
 
             condition.addOperand(UUIDCall);
 
-            DeleteStatement delete = new DeleteStatement(vars, new Identifier(dataverse),
-                    new Identifier(subscriptionsDatasetName), condition, varCounter);
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor();
+            DeleteStatement delete = new DeleteStatement(vars, dataverse, new Identifier(subscriptionsDatasetName),
+                    condition, varCounter);
+            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
             delete.accept(visitor, null);
             MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getApplicationContext(),
                     metadataProvider.getDefaultDataverse());

@@ -23,6 +23,7 @@ import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -67,7 +68,7 @@ public class BADListenerTest {
     @BeforeClass
     public static void init() {
         djsel = new DeployedJobSpecEventListener(null,
-                new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, "test", "test"),
+                new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, DataverseName.createSinglePartName("test"), "test"),
                 DeployedJobSpecEventListener.PrecompiledType.CHANNEL);
     }
 

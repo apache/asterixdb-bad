@@ -22,7 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,6 +44,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -54,11 +54,11 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
+import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppDeleteRewriteVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -71,6 +71,7 @@ import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
@@ -89,7 +90,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
     private final List<VariableExpr> varList;
     private final CallExpr period;
     private String duration = "";
-    private List<List<List<String>>> dependencies;
+    private List<List<Triple<DataverseName, String, String>>> dependencies;
 
     public CreateProcedureStatement(FunctionSignature signature, List<VarIdentifier> parameterList,
             List<Integer> paramIds, String functionBody, Expression period) {
@@ -115,7 +116,8 @@ public class CreateProcedureStatement extends ExtensionStatement {
             Matcher matcher = variableReference.matcher(newBody);
             newBody = matcher.replaceAll("$1get_job_param(\"" + var.getVar() + "\")$2");
         }
-        return "use " + signature.getNamespace() + ";\n" + newBody + ";";
+        return "use " + SqlppStatementUtil.encloseDataverseName(new StringBuilder(), signature.getDataverseName())
+                + ";\n" + newBody + ";";
     }
 
     public String getProcedureBody() {
@@ -181,9 +183,9 @@ public class CreateProcedureStatement extends ExtensionStatement {
                 throw new CompilationException("Insert procedures cannot have parameters");
             }
             InsertStatement insertStatement = (InsertStatement) getProcedureBodyStatement();
-            dependencies.get(0).add(Arrays.asList(
-                    ((QueryTranslator) statementExecutor).getActiveDataverse(insertStatement.getDataverseName()),
-                    insertStatement.getDatasetName().getValue()));
+            dependencies.get(0)
+                    .add(new Triple<>(statementExecutor.getActiveDataverseName(insertStatement.getDataverseName()),
+                            insertStatement.getDatasetName(), null));
             return new Pair<>(((QueryTranslator) statementExecutor).handleInsertUpsertStatement(metadataProvider,
                     getProcedureBodyStatement(), hcc, null, ResultDelivery.ASYNC, null, stats, true, null, null, null),
                     PrecompiledType.INSERT);
@@ -197,7 +199,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
                     ((Query) getProcedureBodyStatement()).getBody(), metadataProvider).get(0));
             return pair;
         } else if (getProcedureBodyStatement().getKind() == Statement.Kind.DELETE) {
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor();
+            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
             getProcedureBodyStatement().accept(visitor, null);
             DeleteStatement delete = (DeleteStatement) getProcedureBodyStatement();
 
@@ -228,8 +230,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         initialize();
-        String dataverse =
-                ((QueryTranslator) statementExecutor).getActiveDataverse(new Identifier(signature.getNamespace()));
+        DataverseName dataverse = statementExecutor.getActiveDataverseName(signature.getDataverseName());
         EntityId entityId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverse, signature.getName());
         DeployedJobSpecEventListener listener = (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);
         boolean alreadyActive = false;

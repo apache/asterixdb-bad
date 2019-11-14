@@ -32,6 +32,7 @@ import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.statement.DropDatasetStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
@@ -48,17 +49,17 @@ import org.apache.hyracks.api.job.DeployedJobSpecId;
 public class ChannelDropStatement extends ExtensionStatement {
     private static final Logger LOGGER = Logger.getLogger(ChannelDropStatement.class.getName());
 
-    private final Identifier dataverseName;
+    private final DataverseName dataverseName;
     private final Identifier channelName;
     private boolean ifExists;
 
-    public ChannelDropStatement(Identifier dataverseName, Identifier channelName, boolean ifExists) {
+    public ChannelDropStatement(DataverseName dataverseName, Identifier channelName, boolean ifExists) {
         this.dataverseName = dataverseName;
         this.channelName = channelName;
         this.ifExists = ifExists;
     }
 
-    public Identifier getDataverseName() {
+    public DataverseName getDataverseName() {
         return dataverseName;
     }
 
@@ -84,7 +85,7 @@ public class ChannelDropStatement extends ExtensionStatement {
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {
-        String dataverse = ((QueryTranslator) statementExecutor).getActiveDataverse(dataverseName);
+        DataverseName dataverse = statementExecutor.getActiveDataverseName(dataverseName);
         boolean txnActive = false;
         EntityId entityId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, dataverse, channelName.getValue());
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
@@ -112,14 +113,14 @@ public class ChannelDropStatement extends ExtensionStatement {
                 //TODO: Channels need to better handle cluster failures
                 LOGGER.log(Level.SEVERE,
                         "Tried to drop a Deployed Job  whose listener no longer exists:  " + entityId.getExtensionName()
-                                + " " + entityId.getDataverse() + "." + entityId.getEntityName() + ".");
+                                + " " + entityId.getDataverseName() + "." + entityId.getEntityName() + ".");
 
             } else {
                 listener.getExecutorService().shutdown();
                 if (!listener.getExecutorService().awaitTermination(BADConstants.EXECUTOR_TIMEOUT, TimeUnit.SECONDS)) {
                     LOGGER.log(Level.SEVERE,
                             "Executor Service is terminating non-gracefully for: " + entityId.getExtensionName() + " "
-                                    + entityId.getDataverse() + "." + entityId.getEntityName());
+                                    + entityId.getDataverseName() + "." + entityId.getEntityName());
                 }
                 DeployedJobSpecId deployedJobSpecId = listener.getDeployedJobSpecId();
                 listener.deActivate();
@@ -136,12 +137,11 @@ public class ChannelDropStatement extends ExtensionStatement {
 
             //Remove the Channel Metadata
             MetadataManager.INSTANCE.deleteEntity(mdTxnCtx, channel);
-            DropDatasetStatement dropStmt = new DropDatasetStatement(new Identifier(dataverse),
-                    new Identifier(channel.getResultsDatasetName()), true);
+            DropDatasetStatement dropStmt =
+                    new DropDatasetStatement(dataverse, new Identifier(channel.getResultsDatasetName()), true);
             ((QueryTranslator) statementExecutor).handleDatasetDropStatement(tempMdProvider, dropStmt, hcc, null);
             tempMdProvider.getLocks().reset();
-            dropStmt = new DropDatasetStatement(new Identifier(dataverse),
-                    new Identifier(channel.getSubscriptionsDataset()), true);
+            dropStmt = new DropDatasetStatement(dataverse, new Identifier(channel.getSubscriptionsDataset()), true);
             ((QueryTranslator) statementExecutor).handleDatasetDropStatement(tempMdProvider, dropStmt, hcc, null);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {

@@ -15,16 +15,11 @@
 
 package org.apache.asterix.bad.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-
 import org.apache.asterix.common.exceptions.MetadataException;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -41,46 +36,32 @@ public class BrokerTupleTranslator extends AbstractTupleTranslator<Broker> {
     // Payload field containing serialized broker.
     public static final int BROKER_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
-    @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<ARecord> recordSerDes =
-            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BADMetadataRecordTypes.BROKER_RECORDTYPE);
-
-    @SuppressWarnings("unchecked")
     public BrokerTupleTranslator(boolean getTuple) {
-        super(getTuple, BADMetadataIndexes.NUM_FIELDS_BROKER_IDX);
+        super(getTuple, BADMetadataIndexes.BROKER_DATASET, BROKER_PAYLOAD_TUPLE_FIELD_INDEX);
     }
 
     @Override
-    public Broker getMetadataEntityFromTuple(ITupleReference frameTuple) throws HyracksDataException {
-        byte[] serRecord = frameTuple.getFieldData(BROKER_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordStartOffset = frameTuple.getFieldStart(BROKER_PAYLOAD_TUPLE_FIELD_INDEX);
-        int recordLength = frameTuple.getFieldLength(BROKER_PAYLOAD_TUPLE_FIELD_INDEX);
-        ByteArrayInputStream stream = new ByteArrayInputStream(serRecord, recordStartOffset, recordLength);
-        DataInput in = new DataInputStream(stream);
-        ARecord channelRecord = recordSerDes.deserialize(in);
-        return createBrokerFromARecord(channelRecord);
-    }
-
-    private Broker createBrokerFromARecord(ARecord brokerRecord) {
-        Broker broker = null;
-        String dataverseName =
+    public Broker createMetadataEntityFromARecord(ARecord brokerRecord) throws HyracksDataException {
+        String dataverseCanonicalName =
                 ((AString) brokerRecord.getValueByPos(BADMetadataRecordTypes.BROKER_DATAVERSE_NAME_FIELD_INDEX))
                         .getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String brokerName =
                 ((AString) brokerRecord.getValueByPos(BADMetadataRecordTypes.BROKER_NAME_FIELD_INDEX)).getStringValue();
         String endPointName = ((AString) brokerRecord.getValueByPos(BADMetadataRecordTypes.BROKER_ENDPOINT_FIELD_INDEX))
                 .getStringValue();
 
-        broker = new Broker(dataverseName, brokerName, endPointName);
-        return broker;
+        return new Broker(dataverseName, brokerName, endPointName);
     }
 
     @Override
     public ITupleReference getTupleFromMetadataEntity(Broker broker) throws HyracksDataException, MetadataException {
+        String dataverseCanonicalName = broker.getDataverseName().getCanonicalForm();
+
         // write the key in the first fields of the tuple
 
         tupleBuilder.reset();
-        aString.setValue(broker.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
@@ -92,7 +73,7 @@ public class BrokerTupleTranslator extends AbstractTupleTranslator<Broker> {
 
         // write field 0
         fieldValue.reset();
-        aString.setValue(broker.getDataverseName());
+        aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.BROKER_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
 

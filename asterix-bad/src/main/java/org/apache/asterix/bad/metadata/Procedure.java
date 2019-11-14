@@ -23,8 +23,10 @@ import java.util.List;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.bad.BADConstants;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class Procedure implements IExtensionMetadataEntity {
     private static final long serialVersionUID = 1L;
@@ -40,14 +42,15 @@ public class Procedure implements IExtensionMetadataEntity {
     /*
     Dependencies are stored as an array of size two:
     element 0 is a list of dataset dependencies
-    -stored as lists of [DataverseName, Dataset] for the datasets
+    -stored as triples of [DataverseName, Dataset, null] for the datasets
     element 1 is a list of function dependencies
-    -stored as lists of [DataverseName, FunctionName, Arity] for the functions
+    -stored as triples of [DataverseName, FunctionName, Arity] for the functions
      */
-    private final List<List<List<String>>> dependencies;
+    private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
-    public Procedure(String dataverseName, String functionName, int arity, List<String> params, String type,
-            String functionBody, String language, String duration, List<List<List<String>>> dependencies) {
+    public Procedure(DataverseName dataverseName, String functionName, int arity, List<String> params, String type,
+            String functionBody, String language, String duration,
+            List<List<Triple<DataverseName, String, String>>> dependencies) {
         this.procedureId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverseName, functionName);
         this.params = params;
         this.body = functionBody;
@@ -92,7 +95,7 @@ public class Procedure implements IExtensionMetadataEntity {
         return duration;
     }
 
-    public List<List<List<String>>> getDependencies() {
+    public List<List<Triple<DataverseName, String, String>>> getDependencies() {
         return dependencies;
     }
 

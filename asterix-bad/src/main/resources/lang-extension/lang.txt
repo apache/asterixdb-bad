@@ -97,7 +97,7 @@ Statement DropStatement() throws ParseException:
 @new
 CreateChannelStatement ChannelSpecification() throws ParseException:
 {
-  Pair<Identifier,Identifier> nameComponents = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
   FunctionSignature appliedFunction = null;
   CreateChannelStatement ccs = null;
   String fqFunctionName = null;
@@ -133,7 +133,7 @@ CreateProcedureStatement ProcedureSpecification() throws ParseException:
   Token endPos;
   Statement functionBodyExpr;
   Expression period = null;
-  String currentDataverse = defaultDataverse;
+  DataverseName currentDataverse = defaultDataverse;
   createNewScope();
 }
 {
@@ -200,7 +200,7 @@ ExecuteProcedureStatement ProcedureExecution() throws ParseException:
 CreateBrokerStatement BrokerSpecification() throws ParseException:
 {
   CreateBrokerStatement cbs = null;
-  Pair<Identifier,Identifier> name = null;
+  Pair<DataverseName,Identifier> name = null;
   String endPoint = null;
 }
 {
@@ -220,12 +220,12 @@ CreateBrokerStatement BrokerSpecification() throws ParseException:
 Statement ChannelSubscriptionStatement() throws ParseException:
 {
   Statement stmt = null;
-  Pair<Identifier,Identifier> nameComponents = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
   List<Expression> argList = new ArrayList<Expression>();
   Expression tmp = null;
   String id = null;
   String subscriptionId = null;
-  Pair<Identifier,Identifier> brokerName = null;
+  Pair<DataverseName,Identifier> brokerName = null;
 }
 {
   (
