@@ -305,7 +305,7 @@ public class CreateChannelStatement extends ExtensionStatement {
             if (!push && MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, resultsTableName) != null) {
                 throw new AsterixException("The channel name:" + channelName + " is not available.");
             }
-            MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getApplicationContext(),
+            MetadataProvider tempMdProvider = MetadataProvider.create(metadataProvider.getApplicationContext(),
                     metadataProvider.getDefaultDataverse());
             tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
             final IResultSet resultSet = requestContext.getResultSet();

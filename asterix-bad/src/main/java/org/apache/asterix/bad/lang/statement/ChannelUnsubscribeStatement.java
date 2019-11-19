@@ -136,7 +136,7 @@ public class ChannelUnsubscribeStatement extends ExtensionStatement {
                     condition, varCounter);
             SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
             delete.accept(visitor, null);
-            MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getApplicationContext(),
+            MetadataProvider tempMdProvider = MetadataProvider.create(metadataProvider.getApplicationContext(),
                     metadataProvider.getDefaultDataverse());
             tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
             ((QueryTranslator) statementExecutor).handleDeleteStatement(tempMdProvider, delete, hcc, false, null, null);

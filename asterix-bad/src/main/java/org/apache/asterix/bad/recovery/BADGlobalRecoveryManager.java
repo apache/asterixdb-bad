@@ -120,7 +120,7 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
         //Redeploy Jobs
         for (Channel channel : channels) {
             EntityId entityId = channel.getChannelId();
-            metadataProvider = new MetadataProvider(appCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
+            metadataProvider = MetadataProvider.create(appCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
             DeployedJobSpecEventListener listener =
                     new DeployedJobSpecEventListener(appCtx, entityId, channel.getResultsDatasetName().equals("")
                             ? PrecompiledType.PUSH_CHANNEL : PrecompiledType.CHANNEL);
@@ -144,7 +144,7 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
         }
         for (Procedure procedure : procedures) {
             EntityId entityId = procedure.getEntityId();
-            metadataProvider = new MetadataProvider(appCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
+            metadataProvider = MetadataProvider.create(appCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
             metadataProvider.setWriterFactory(PrinterBasedWriterFactory.INSTANCE);
             metadataProvider.setResultSerializerFactoryProvider(ResultSerializerFactoryProvider.INSTANCE);
             DeployedJobSpecEventListener listener =

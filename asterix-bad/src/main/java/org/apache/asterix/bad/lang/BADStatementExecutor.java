@@ -236,17 +236,17 @@ public class BADStatementExecutor extends QueryTranslator {
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         metadataProvider.getLocks().unlock();
 
-        metadataProvider = new MetadataProvider(appCtx, activeDataverse);
+        metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
         super.handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters);
 
         for (Channel channel : usages.first) {
-            metadataProvider = new MetadataProvider(appCtx, activeDataverse);
+            metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
             BADJobService.redeployJobSpec(channel.getChannelId(), channel.getChannelBody(), metadataProvider, this, hcc,
                     requestParameters, false);
             metadataProvider.getLocks().unlock();
         }
         for (Procedure procedure : usages.second) {
-            metadataProvider = new MetadataProvider(appCtx, activeDataverse);
+            metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
             BADJobService.redeployJobSpec(procedure.getEntityId(), procedure.getBody(), metadataProvider, this, hcc,
                     requestParameters, false);
             metadataProvider.getLocks().unlock();
@@ -303,7 +303,7 @@ public class BADStatementExecutor extends QueryTranslator {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         DataverseName dvId = ((DataverseDropStatement) stmt).getDataverseName();
-        MetadataProvider tempMdProvider = new MetadataProvider(appCtx, metadataProvider.getDefaultDataverse());
+        MetadataProvider tempMdProvider = MetadataProvider.create(appCtx, metadataProvider.getDefaultDataverse());
         tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
         List<Channel> channels = BADLangExtension.getAllChannels(mdTxnCtx);
         for (Channel channel : channels) {

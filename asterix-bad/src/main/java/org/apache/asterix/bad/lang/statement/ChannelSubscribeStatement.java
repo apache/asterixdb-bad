@@ -178,7 +178,7 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
             RecordConstructor recordCon = new RecordConstructor(fb);
             subscriptionTuple.setBody(recordCon);
             subscriptionTuple.setVarCounter(varCounter);
-            MetadataProvider tempMdProvider = new MetadataProvider(metadataProvider.getApplicationContext(),
+            MetadataProvider tempMdProvider = MetadataProvider.create(metadataProvider.getApplicationContext(),
                     metadataProvider.getDefaultDataverse());
             tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
 
