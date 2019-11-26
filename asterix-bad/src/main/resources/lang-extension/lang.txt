@@ -59,7 +59,10 @@ Statement CreateStatement() throws ParseException:
   (
     // merge area 2
     before:
-    after:    | stmt = ChannelSpecification() | stmt = BrokerSpecification() | stmt = ProcedureSpecification())
+    after:    | stmt = CreateChannelStatement()
+              | stmt = CreateBrokerStatement()
+              | stmt = CreateProcedureStatement()
+  )
   {
     // merge area 3
   }
@@ -76,26 +79,17 @@ Statement DropStatement() throws ParseException:
   (
     // merge area 2
     before:
-    after:    | "channel" pairId = QualifiedName() ifExists = IfExists()
-      {
-        stmt = new ChannelDropStatement(pairId.first, pairId.second, ifExists);
-      }
-              | "broker" pairId = QualifiedName() ifExists = IfExists()
-      {
-        stmt = new BrokerDropStatement(pairId.first, pairId.second, ifExists);
-      }
-              | "procedure" funcSig = FunctionSignature() ifExists = IfExists()
-      {
-        stmt = new ProcedureDropStatement(funcSig, ifExists);
-      }
-      )
+    after:    | stmt = DropChannelStatement(startToken)
+              | stmt = DropBrokerStatement(startToken)
+              | stmt = DropProcedureStatement(startToken)
+  )
   {
     // merge area 3
   }
 }
 
 @new
-CreateChannelStatement ChannelSpecification() throws ParseException:
+CreateChannelStatement CreateChannelStatement() throws ParseException:
 {
   Pair<DataverseName,Identifier> nameComponents = null;
   FunctionSignature appliedFunction = null;
@@ -122,7 +116,7 @@ CreateChannelStatement ChannelSpecification() throws ParseException:
 }
 
 @new
-CreateProcedureStatement ProcedureSpecification() throws ParseException:
+CreateProcedureStatement CreateProcedureStatement() throws ParseException:
 {
   FunctionName fctName = null;
   FunctionSignature signature;
@@ -197,7 +191,7 @@ ExecuteProcedureStatement ProcedureExecution() throws ParseException:
 }
 
 @new
-CreateBrokerStatement BrokerSpecification() throws ParseException:
+CreateBrokerStatement CreateBrokerStatement() throws ParseException:
 {
   CreateBrokerStatement cbs = null;
   Pair<DataverseName,Identifier> name = null;
@@ -266,4 +260,49 @@ Statement ChannelSubscriptionStatement() throws ParseException:
     {
       return stmt;
     }
+}
+
+@new
+ChannelDropStatement DropChannelStatement(Token startStmtToken) throws ParseException:
+{
+  ChannelDropStatement stmt = null;
+  Pair<DataverseName,Identifier> pairId = null;
+  boolean ifExists = false;
+}
+{
+  "channel" pairId = QualifiedName() ifExists = IfExists()
+  {
+    stmt = new ChannelDropStatement(pairId.first, pairId.second, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+@new
+BrokerDropStatement DropBrokerStatement(Token startStmtToken) throws ParseException:
+{
+  BrokerDropStatement stmt = null;
+  Pair<DataverseName,Identifier> pairId = null;
+  boolean ifExists = false;
+}
+{
+  "broker" pairId = QualifiedName() ifExists = IfExists()
+  {
+    stmt = new BrokerDropStatement(pairId.first, pairId.second, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+@new
+ProcedureDropStatement DropProcedureStatement(Token startStmtToken) throws ParseException:
+{
+  ProcedureDropStatement stmt = null;
+  FunctionSignature funcSig = null;
+  boolean ifExists = false;
+}
+{
+  "procedure" funcSig = FunctionSignature() ifExists = IfExists()
+  {
+    stmt = new ProcedureDropStatement(funcSig, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
 }
