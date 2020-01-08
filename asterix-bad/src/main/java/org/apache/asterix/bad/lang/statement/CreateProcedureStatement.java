@@ -199,8 +199,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
                     ((Query) getProcedureBodyStatement()).getBody(), metadataProvider).get(0));
             return pair;
         } else if (getProcedureBodyStatement().getKind() == Statement.Kind.DELETE) {
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
-            getProcedureBodyStatement().accept(visitor, null);
+            getProcedureBodyStatement().accept(SqlppDeleteRewriteVisitor.INSTANCE, metadataProvider);
             DeleteStatement delete = (DeleteStatement) getProcedureBodyStatement();
 
             SqlppRewriterFactory fact = new SqlppRewriterFactory();

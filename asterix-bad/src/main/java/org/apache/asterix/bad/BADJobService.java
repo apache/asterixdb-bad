@@ -283,8 +283,7 @@ public class BADJobService {
         } else if (procedureStatement.getKind() == Statement.Kind.QUERY) {
             return compileQueryJob(statementExecutor, metadataProvider, hcc, (Query) procedureStatement);
         } else {
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
-            procedureStatement.accept(visitor, null);
+            procedureStatement.accept(SqlppDeleteRewriteVisitor.INSTANCE, metadataProvider);
             return ((QueryTranslator) statementExecutor).handleDeleteStatement(metadataProvider, procedureStatement,
                     hcc, true, null, null);
         }

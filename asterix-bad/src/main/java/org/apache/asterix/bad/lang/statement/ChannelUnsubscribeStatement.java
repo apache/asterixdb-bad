@@ -132,10 +132,9 @@ public class ChannelUnsubscribeStatement extends ExtensionStatement {
 
             condition.addOperand(UUIDCall);
 
-            DeleteStatement delete = new DeleteStatement(vars, dataverse, new Identifier(subscriptionsDatasetName),
-                    condition, varCounter);
-            SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor(metadataProvider);
-            delete.accept(visitor, null);
+            DeleteStatement delete =
+                    new DeleteStatement(vars, dataverse, subscriptionsDatasetName, condition, varCounter);
+            delete.accept(SqlppDeleteRewriteVisitor.INSTANCE, metadataProvider);
             MetadataProvider tempMdProvider = MetadataProvider.create(metadataProvider.getApplicationContext(),
                     metadataProvider.getDefaultDataverse());
             tempMdProvider.getConfig().putAll(metadataProvider.getConfig());

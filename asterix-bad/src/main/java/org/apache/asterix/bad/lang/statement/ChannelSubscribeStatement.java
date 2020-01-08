@@ -204,14 +204,14 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
                 tempMdProvider.setOutputFile(metadataProvider.getOutputFile());
                 tempMdProvider.setMaxResultReads(requestParameters.getResultProperties().getMaxReads());
 
-                InsertStatement insert = new InsertStatement(dataverse, new Identifier(subscriptionsDatasetName),
-                        subscriptionTuple, varCounter, resultVar, accessor);
+                InsertStatement insert = new InsertStatement(dataverse, subscriptionsDatasetName, subscriptionTuple,
+                        varCounter, resultVar, accessor);
                 ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, insert, hcc,
                         resultSet, resultDelivery, null, stats, false, requestParameters, null, null);
             } else {
                 //To update an existing subscription
-                UpsertStatement upsert = new UpsertStatement(dataverse, new Identifier(subscriptionsDatasetName),
-                        subscriptionTuple, varCounter, null, null);
+                UpsertStatement upsert = new UpsertStatement(dataverse, subscriptionsDatasetName, subscriptionTuple,
+                        varCounter, null, null);
                 ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(tempMdProvider, upsert, hcc,
                         resultSet, resultDelivery, null, stats, false, requestParameters, null, null);
             }
