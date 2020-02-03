@@ -190,13 +190,18 @@ public class CreateProcedureStatement extends ExtensionStatement {
                     getProcedureBodyStatement(), hcc, null, ResultDelivery.ASYNC, null, stats, true, null, null, null),
                     PrecompiledType.INSERT);
         } else if (getProcedureBodyStatement().getKind() == Statement.Kind.QUERY) {
+            //TODO: Fix type dependency computation
             SqlppRewriterFactory fact = new SqlppRewriterFactory();
-            dependencies.get(1).addAll(FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(),
-                    ((Query) getProcedureBodyStatement()).getBody(), metadataProvider).get(1));
+            dependencies.get(1)
+                    .addAll(FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(),
+                            ((Query) getProcedureBodyStatement()).getBody(), metadataProvider, new ArrayList<>())
+                            .get(1));
             Pair<JobSpecification, PrecompiledType> pair = new Pair<>(BADJobService.compileQueryJob(statementExecutor,
                     metadataProvider, hcc, (Query) getProcedureBodyStatement()), PrecompiledType.QUERY);
-            dependencies.get(0).addAll(FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(),
-                    ((Query) getProcedureBodyStatement()).getBody(), metadataProvider).get(0));
+            dependencies.get(0)
+                    .addAll(FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(),
+                            ((Query) getProcedureBodyStatement()).getBody(), metadataProvider, new ArrayList<>())
+                            .get(0));
             return pair;
         } else if (getProcedureBodyStatement().getKind() == Statement.Kind.DELETE) {
             getProcedureBodyStatement().accept(SqlppDeleteRewriteVisitor.INSTANCE, metadataProvider);
@@ -204,7 +209,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
 
             SqlppRewriterFactory fact = new SqlppRewriterFactory();
             dependencies = FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(), delete.getQuery().getBody(),
-                    metadataProvider);
+                    metadataProvider, new ArrayList<>());
             Pair<JobSpecification, PrecompiledType> pair =
                     new Pair<>(((QueryTranslator) statementExecutor).handleDeleteStatement(metadataProvider,
                             getProcedureBodyStatement(), hcc, true, null, null), PrecompiledType.DELETE);

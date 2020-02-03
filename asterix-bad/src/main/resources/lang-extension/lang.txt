@@ -120,7 +120,7 @@ CreateProcedureStatement CreateProcedureStatement() throws ParseException:
 {
   FunctionName fctName = null;
   FunctionSignature signature;
-  List<VarIdentifier> paramList = new ArrayList<VarIdentifier>();
+  List<Pair<VarIdentifier,IndexedTypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,IndexedTypeExpression>>();
   List<Integer> paramIds = new ArrayList<Integer>();
   String functionBody;
   Token beginPos;
@@ -135,12 +135,12 @@ CreateProcedureStatement CreateProcedureStatement() throws ParseException:
      {
         defaultDataverse = fctName.dataverse;
      }
-     paramList = ParameterList()
+     paramList = FunctionParameters()
     <LEFTBRACE>
   {
-    for (VarIdentifier param : paramList)
+    for (Pair<VarIdentifier,IndexedTypeExpression> param : paramList)
     {
-      VarIdentifier v = new VarIdentifier(param.toString());
+      VarIdentifier v = new VarIdentifier(param.getFirst().toString());
       getCurrentScope().addNewVarSymbolToScope(v);
       paramIds.add(v.getId());
     }
@@ -156,7 +156,11 @@ CreateProcedureStatement CreateProcedureStatement() throws ParseException:
     }
   ("period" period = FunctionCallExpr())?
   {
-  return new CreateProcedureStatement(signature, paramList, paramIds, functionBody, period);
+  List<VarIdentifier> paramListVariablesOnly = new ArrayList<VarIdentifier>();
+  for(Pair<VarIdentifier,IndexedTypeExpression> p: paramList){
+    paramListVariablesOnly.add(p.first);
+  }
+  return new CreateProcedureStatement(signature, paramListVariablesOnly, paramIds, functionBody, period);
   }
 }
 
