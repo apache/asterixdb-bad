@@ -23,8 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -32,6 +35,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -65,7 +69,7 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
     }
 
     @Override
-    public Procedure createMetadataEntityFromARecord(ARecord procedureRecord) throws HyracksDataException {
+    public Procedure createMetadataEntityFromARecord(ARecord procedureRecord) throws AlgebricksException {
         String dataverseCanonicalName = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -88,9 +92,13 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_DEFINITION_FIELD_INDEX))
                         .getStringValue();
 
-        String language = ((AString) procedureRecord
+        String languageValue = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_LANGUAGE_FIELD_INDEX))
                         .getStringValue();
+        Function.FunctionLanguage language = Function.FunctionLanguage.findByName(languageValue);
+        if (language == null) {
+            throw new AsterixException(ErrorCode.METADATA_ERROR, languageValue);
+        }
 
         String duration = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_DURATION_FIELD_INDEX))
@@ -196,7 +204,7 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
 
         // write field 6
         fieldValue.reset();
-        aString.setValue(procedure.getLanguage());
+        aString.setValue(procedure.getLanguage().getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_LANGUAGE_FIELD_INDEX, fieldValue);
 

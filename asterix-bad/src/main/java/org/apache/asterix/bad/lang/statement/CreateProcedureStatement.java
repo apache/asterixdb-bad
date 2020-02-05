@@ -57,6 +57,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppDeleteRewriteVisitor;
@@ -191,7 +192,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
                     PrecompiledType.INSERT);
         } else if (getProcedureBodyStatement().getKind() == Statement.Kind.QUERY) {
             //TODO: Fix type dependency computation
-            SqlppRewriterFactory fact = new SqlppRewriterFactory();
+            SqlppRewriterFactory fact = new SqlppRewriterFactory(new SqlppParserFactory());
             dependencies.get(1)
                     .addAll(FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(),
                             ((Query) getProcedureBodyStatement()).getBody(), metadataProvider, new ArrayList<>())
@@ -207,7 +208,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
             getProcedureBodyStatement().accept(SqlppDeleteRewriteVisitor.INSTANCE, metadataProvider);
             DeleteStatement delete = (DeleteStatement) getProcedureBodyStatement();
 
-            SqlppRewriterFactory fact = new SqlppRewriterFactory();
+            SqlppRewriterFactory fact = new SqlppRewriterFactory(new SqlppParserFactory());
             dependencies = FunctionUtil.getFunctionDependencies(fact.createQueryRewriter(), delete.getQuery().getBody(),
                     metadataProvider, new ArrayList<>());
             Pair<JobSpecification, PrecompiledType> pair =
@@ -272,7 +273,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
                     stats);
 
             procedure = new Procedure(dataverse, signature.getName(), signature.getArity(), getParamList(),
-                    procedureJobSpec.second.toString(), getProcedureBody(), Function.LANGUAGE_SQLPP, duration,
+                    procedureJobSpec.second.toString(), getProcedureBody(), Function.FunctionLanguage.SQLPP, duration,
                     dependencies);
 
             MetadataManager.INSTANCE.addEntity(mdTxnCtx, procedure);
