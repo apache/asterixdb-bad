@@ -95,8 +95,10 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
         String languageValue = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_LANGUAGE_FIELD_INDEX))
                         .getStringValue();
-        Function.FunctionLanguage language = Function.FunctionLanguage.findByName(languageValue);
-        if (language == null) {
+        Function.FunctionLanguage language;
+        try {
+            language = Function.FunctionLanguage.valueOf(languageValue);
+        } catch (IllegalArgumentException e) {
             throw new AsterixException(ErrorCode.METADATA_ERROR, languageValue);
         }
 
@@ -204,7 +206,7 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
 
         // write field 6
         fieldValue.reset();
-        aString.setValue(procedure.getLanguage().getName());
+        aString.setValue(procedure.getLanguage().name());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_LANGUAGE_FIELD_INDEX, fieldValue);
 
