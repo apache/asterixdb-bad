@@ -64,7 +64,6 @@ import org.apache.asterix.lang.sqlpp.visitor.SqlppDeleteRewriteVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
@@ -273,7 +272,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
                     stats);
 
             procedure = new Procedure(dataverse, signature.getName(), signature.getArity(), getParamList(),
-                    procedureJobSpec.second.toString(), getProcedureBody(), Function.FunctionLanguage.SQLPP, duration,
+                    procedureJobSpec.second.toString(), getProcedureBody(), SqlppParserFactory.SQLPP, duration,
                     dependencies);
 
             MetadataManager.INSTANCE.addEntity(mdTxnCtx, procedure);

@@ -26,7 +26,6 @@ import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class Procedure implements IExtensionMetadataEntity {
@@ -38,7 +37,7 @@ public class Procedure implements IExtensionMetadataEntity {
     private final List<String> params;
     private final String body;
     private final String type;
-    private final Function.FunctionLanguage language;
+    private final String language;
     private final String duration;
     /*
     Dependencies are stored as an array of size two:
@@ -50,7 +49,7 @@ public class Procedure implements IExtensionMetadataEntity {
     private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
     public Procedure(DataverseName dataverseName, String functionName, int arity, List<String> params, String type,
-            String functionBody, Function.FunctionLanguage language, String duration,
+            String functionBody, String language, String duration,
             List<List<Triple<DataverseName, String, String>>> dependencies) {
         this.procedureId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverseName, functionName);
         this.params = params;
@@ -84,7 +83,7 @@ public class Procedure implements IExtensionMetadataEntity {
         return type;
     }
 
-    public Function.FunctionLanguage getLanguage() {
+    public String getLanguage() {
         return language;
     }
 

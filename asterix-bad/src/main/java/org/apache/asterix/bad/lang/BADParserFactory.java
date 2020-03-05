@@ -21,9 +21,9 @@ package org.apache.asterix.bad.lang;
 import java.io.Reader;
 
 import org.apache.asterix.lang.common.base.IParser;
-import org.apache.asterix.lang.common.base.IParserFactory;
+import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 
-public class BADParserFactory implements IParserFactory {
+public class BADParserFactory extends SqlppParserFactory {
 
     @Override
     public IParser createParser(String query) {

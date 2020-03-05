@@ -23,11 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -91,16 +88,9 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
         String definition = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_DEFINITION_FIELD_INDEX))
                         .getStringValue();
-
-        String languageValue = ((AString) procedureRecord
+        String language = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_LANGUAGE_FIELD_INDEX))
                         .getStringValue();
-        Function.FunctionLanguage language;
-        try {
-            language = Function.FunctionLanguage.valueOf(languageValue);
-        } catch (IllegalArgumentException e) {
-            throw new AsterixException(ErrorCode.METADATA_ERROR, languageValue);
-        }
 
         String duration = ((AString) procedureRecord
                 .getValueByPos(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_DURATION_FIELD_INDEX))
@@ -206,7 +196,7 @@ public class ProcedureTupleTranslator extends AbstractTupleTranslator<Procedure>
 
         // write field 6
         fieldValue.reset();
-        aString.setValue(procedure.getLanguage().name());
+        aString.setValue(procedure.getLanguage());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.PROCEDURE_ARECORD_PROCEDURE_LANGUAGE_FIELD_INDEX, fieldValue);
 
