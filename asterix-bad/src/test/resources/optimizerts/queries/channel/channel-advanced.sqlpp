@@ -66,6 +66,6 @@ create function RecentEmergenciesNearUser(userName) {
 };
 
 write output to nc1:"rttest/channel-advanced.sqlpp";
-set noindexonly 'true';
+set `compiler.indexonly` "false";
 
 create repetitive channel EmergencyChannel using RecentEmergenciesNearUser@1 period duration("PT10S");
