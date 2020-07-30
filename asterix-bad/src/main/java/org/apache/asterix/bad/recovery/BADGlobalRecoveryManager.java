@@ -129,7 +129,8 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
             RequestReference requestReference =
                     RequestReference.of(UUID.randomUUID().toString(), "CC", System.currentTimeMillis());
             BADJobService.redeployJobSpec(entityId, channel.getChannelBody(), metadataProvider, badStatementExecutor,
-                    hcc, new RequestParameters(requestReference, null, null, null, null, null, null, null, null, true),
+                    hcc,
+                    new RequestParameters(requestReference, null, null, null, null, null, null, null, null, null, true),
                     true);
 
             ScheduledExecutorService ses = BADJobService.startRepetitiveDeployedJobSpec(listener.getDeployedJobSpecId(),
@@ -160,7 +161,8 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
                                             .getSocketChannelFactory(),
                                     appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS),
                             new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                            new IStatementExecutor.Stats(), null, null, null, null, true),
+                            new IStatementExecutor.Stats(), new IStatementExecutor.StatementProperties(), null, null,
+                            null, null, true),
                     true);
             metadataProvider.getLocks().unlock();
             //Log that the procedure stopped by cluster restart. Procedure is available again now.

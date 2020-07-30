@@ -120,6 +120,11 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
     }
 
     @Override
+    public String getName() {
+        return ChannelSubscribeStatement.class.getName();
+    }
+
+    @Override
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {

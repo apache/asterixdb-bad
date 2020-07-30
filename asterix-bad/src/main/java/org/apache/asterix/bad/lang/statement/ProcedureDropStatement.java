@@ -75,6 +75,11 @@ public class ProcedureDropStatement extends ExtensionStatement {
     }
 
     @Override
+    public String getName() {
+        return ProcedureDropStatement.class.getName();
+    }
+
+    @Override
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {

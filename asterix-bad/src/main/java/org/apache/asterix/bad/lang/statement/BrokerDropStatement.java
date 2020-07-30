@@ -70,6 +70,11 @@ public class BrokerDropStatement extends ExtensionStatement {
     }
 
     @Override
+    public String getName() {
+        return BrokerDropStatement.class.getName();
+    }
+
+    @Override
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {

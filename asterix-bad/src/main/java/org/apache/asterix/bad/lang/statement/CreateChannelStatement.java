@@ -51,6 +51,8 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.TypeExpression;
+import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
@@ -170,9 +172,10 @@ public class CreateChannelStatement extends ExtensionStatement {
         fieldNames.add(BADConstants.SubscriptionId);
         partitionFields.add(fieldNames);
         IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null);
+        TypeExpression subItemType = new TypeReferenceExpression(
+                new Pair<>(MetadataConstants.METADATA_DATAVERSE_NAME, subscriptionsTypeName));
         DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseName, new Identifier(subscriptionsTableName),
-                MetadataConstants.METADATA_DATAVERSE_NAME, subscriptionsTypeName, null, null, null,
-                new HashMap<String, String>(), DatasetType.INTERNAL, idd, null, true);
+                subItemType, null, null, new HashMap<>(), DatasetType.INTERNAL, idd, null, true);
 
         ((QueryTranslator) statementExecutor).handleCreateDatasetStatement(metadataProvider, createSubscriptionsDataset,
                 hcc, null);
@@ -184,9 +187,10 @@ public class CreateChannelStatement extends ExtensionStatement {
             fieldNames.add(BADConstants.ResultId);
             partitionFields.add(fieldNames);
             idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null);
+            TypeExpression resultItemType =
+                    new TypeReferenceExpression(new Pair<>(MetadataConstants.METADATA_DATAVERSE_NAME, resultsTypeName));
             DatasetDecl createResultsDataset = new DatasetDecl(dataverseName, new Identifier(resultsTableName),
-                    MetadataConstants.METADATA_DATAVERSE_NAME, resultsTypeName, null, null, null, new HashMap<>(),
-                    DatasetType.INTERNAL, idd, null, true);
+                    resultItemType, null, null, new HashMap<>(), DatasetType.INTERNAL, idd, null, true);
 
             //Create an index on timestamp for results
             CreateIndexStatement createTimeIndex = new CreateIndexStatement();
@@ -257,6 +261,11 @@ public class CreateChannelStatement extends ExtensionStatement {
         }
         return ((QueryTranslator) statementExecutor).handleInsertUpsertStatement(metadataProvider, fStatements.get(1),
                 hcc, resultSet, ResultDelivery.ASYNC, null, stats, true, null, null, null);
+    }
+
+    @Override
+    public String getName() {
+        return CreateChannelStatement.class.getName();
     }
 
     @Override

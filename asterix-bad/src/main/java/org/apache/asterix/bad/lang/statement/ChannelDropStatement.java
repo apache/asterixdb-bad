@@ -82,6 +82,11 @@ public class ChannelDropStatement extends ExtensionStatement {
     }
 
     @Override
+    public String getName() {
+        return ChannelDropStatement.class.getName();
+    }
+
+    @Override
     public void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException {
