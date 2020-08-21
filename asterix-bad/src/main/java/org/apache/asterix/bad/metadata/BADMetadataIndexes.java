@@ -21,6 +21,7 @@ package org.apache.asterix.bad.metadata;
 import java.util.Arrays;
 
 import org.apache.asterix.bad.BADConstants;
+import org.apache.asterix.bad.extension.BADMetadataExtension;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.metadata.api.ExtensionMetadataDataset;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
@@ -32,23 +33,23 @@ import org.apache.asterix.om.types.IAType;
 public class BADMetadataIndexes {
 
     public static final ExtensionMetadataDatasetId BAD_CHANNEL_INDEX_ID = new ExtensionMetadataDatasetId(
-            BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.CHANNEL_EXTENSION_NAME);
+            BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.METADATA_DATASET_CHANNEL);
     public static final MetadataIndexImmutableProperties PROPERTIES_CHANNEL =
-            new MetadataIndexImmutableProperties(BADConstants.CHANNEL_EXTENSION_NAME,
+            new MetadataIndexImmutableProperties(BADConstants.METADATA_DATASET_CHANNEL,
                     MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID,
                     MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID);
 
-    public static final ExtensionMetadataDatasetId BAD_BROKER_INDEX_ID =
-            new ExtensionMetadataDatasetId(BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.BROKER_KEYWORD);
+    public static final ExtensionMetadataDatasetId BAD_BROKER_INDEX_ID = new ExtensionMetadataDatasetId(
+            BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.METADATA_DATASET_BROKER);
     public static final MetadataIndexImmutableProperties PROPERTIES_BROKER =
-            new MetadataIndexImmutableProperties(BADConstants.BROKER_KEYWORD,
+            new MetadataIndexImmutableProperties(BADConstants.METADATA_DATASET_BROKER,
                     MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 1,
                     MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 1);
 
     public static final ExtensionMetadataDatasetId BAD_PROCEDURE_INDEX_ID = new ExtensionMetadataDatasetId(
-            BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.PROCEDURE_KEYWORD);
+            BADMetadataExtension.BAD_METADATA_EXTENSION_ID, BADConstants.METADATA_DATASET_PROCEDURE);
     public static final MetadataIndexImmutableProperties PROPERTIES_PROCEDURE =
-            new MetadataIndexImmutableProperties(BADConstants.PROCEDURE_KEYWORD,
+            new MetadataIndexImmutableProperties(BADConstants.METADATA_DATASET_PROCEDURE,
                     MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 2,
                     MetadataIndexImmutableProperties.FIRST_AVAILABLE_EXTENSION_METADATA_DATASET_ID + 2);
 
@@ -66,7 +67,7 @@ public class BADMetadataIndexes {
     public static final ExtensionMetadataDataset BROKER_DATASET = new ExtensionMetadataDataset<>(PROPERTIES_BROKER,
             NUM_FIELDS_BROKER_IDX, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
             Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(BADConstants.BrokerName)),
+                    Arrays.asList(BADConstants.METADATA_TYPE_FIELD_NAME_BROKERNAME)),
             0, BADMetadataRecordTypes.BROKER_RECORDTYPE, true, new int[] { 0, 1 }, BAD_BROKER_INDEX_ID,
             (IMetadataEntityTupleTranslatorFactory<Broker>) BrokerTupleTranslator::new);
 

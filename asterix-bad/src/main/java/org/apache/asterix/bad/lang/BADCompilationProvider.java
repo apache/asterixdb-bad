@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.bad.lang;
 
+import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -34,4 +35,8 @@ public class BADCompilationProvider extends SqlppCompilationProvider {
         return new BADRuleSetFactory();
     }
 
+    @Override
+    public ILangExpressionToPlanTranslatorFactory getExpressionToPlanTranslatorFactory() {
+        return new BADExpressionToPlanTranslatorFactory();
+    }
 }

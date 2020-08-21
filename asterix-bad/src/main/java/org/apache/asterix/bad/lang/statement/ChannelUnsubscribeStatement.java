@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.BADConstants;
-import org.apache.asterix.bad.lang.BADLangExtension;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;

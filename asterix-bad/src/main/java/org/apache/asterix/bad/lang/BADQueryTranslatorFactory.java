@@ -35,6 +35,6 @@ public class BADQueryTranslatorFactory extends DefaultStatementExecutorFactory {
     public QueryTranslator create(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
             ILangCompilationProvider compilationProvider, IStorageComponentProvider storageComponentProvider,
             IResponsePrinter printer) {
-        return new BADStatementExecutor(appCtx, statements, output, compilationProvider, executorService, printer);
+        return new BADQueryTranslator(appCtx, statements, output, compilationProvider, executorService, printer);
     }
 }

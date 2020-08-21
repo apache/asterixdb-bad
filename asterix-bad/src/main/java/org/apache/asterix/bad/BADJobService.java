@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.bad;
 
-import java.io.StringReader;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,7 +36,7 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.lang.BADParserFactory;
-import org.apache.asterix.bad.lang.BADStatementExecutor;
+import org.apache.asterix.bad.lang.BADQueryTranslator;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -66,44 +65,44 @@ public class BADJobService {
     private static final Logger LOGGER = Logger.getLogger(BADJobService.class.getName());
 
     //pool size one (only running one thread at a time)
-    private static final int POOL_SIZE = 1;
+    public static final int POOL_SIZE = 1;
 
     private static final long millisecondTimeout = BADConstants.EXECUTOR_TIMEOUT * 1000;
+
+    public static ScheduledExecutorService createExecutorServe() {
+        return Executors.newScheduledThreadPool(POOL_SIZE);
+    }
 
     public static void setupExecutorJob(EntityId entityId, JobSpecification channeljobSpec,
             IHyracksClientConnection hcc, DeployedJobSpecEventListener listener, ITxnIdFactory txnIdFactory,
             String duration) throws Exception {
+        ScheduledExecutorService ses = createExecutorServe();
+        listener.setExecutorService(ses);
         if (channeljobSpec != null) {
             channeljobSpec.setProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
             DeployedJobSpecId deployedId = hcc.deployJobSpec(channeljobSpec);
-            ScheduledExecutorService ses = startRepetitiveDeployedJobSpec(deployedId, hcc, findPeriod(duration),
-                    new HashMap<>(), entityId, txnIdFactory, listener);
+            startRepetitiveDeployedJobSpec(ses, deployedId, hcc, findPeriod(duration), new HashMap<>(), entityId,
+                    txnIdFactory, listener);
             listener.setDeployedJobSpecId(deployedId);
-            listener.setExecutorService(ses);
         }
-
     }
 
     //Starts running a deployed job specification periodically with an interval of "period" seconds
-    public static ScheduledExecutorService startRepetitiveDeployedJobSpec(DeployedJobSpecId distributedId,
-            IHyracksClientConnection hcc, long period, Map<byte[], byte[]> jobParameters, EntityId entityId,
-            ITxnIdFactory txnIdFactory, DeployedJobSpecEventListener listener) {
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(POOL_SIZE);
-        scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (!runDeployedJobSpecCheckPeriod(distributedId, hcc, jobParameters, period, entityId,
-                            txnIdFactory, listener)) {
-                        scheduledExecutorService.shutdown();
-                    }
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Job Failed to run for " + entityId.getExtensionName() + " "
-                            + entityId.getDataverseName() + "." + entityId.getEntityName() + ".", e);
+    public static void startRepetitiveDeployedJobSpec(ScheduledExecutorService scheduledExecutorService,
+            DeployedJobSpecId distributedId, IHyracksClientConnection hcc, long period,
+            Map<byte[], byte[]> jobParameters, EntityId entityId, ITxnIdFactory txnIdFactory,
+            DeployedJobSpecEventListener listener) {
+        scheduledExecutorService.scheduleAtFixedRate(() -> {
+            try {
+                if (!runDeployedJobSpecCheckPeriod(distributedId, hcc, jobParameters, period, entityId, txnIdFactory,
+                        listener)) {
+                    scheduledExecutorService.shutdown();
                 }
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Job Failed to run for " + entityId.getExtensionName() + " "
+                        + entityId.getDataverseName() + "." + entityId.getEntityName() + ".", e);
             }
         }, period, period, TimeUnit.MILLISECONDS);
-        return scheduledExecutorService;
     }
 
     public static boolean runDeployedJobSpecCheckPeriod(DeployedJobSpecId distributedId, IHyracksClientConnection hcc,
@@ -207,8 +206,8 @@ public class BADJobService {
     }
 
     public static void redeployJobSpec(EntityId entityId, String queryBodyString, MetadataProvider metadataProvider,
-            BADStatementExecutor badStatementExecutor, IHyracksClientConnection hcc,
-            IRequestParameters requestParameters, boolean useNewId) throws Exception {
+            BADQueryTranslator badStatementExecutor, IHyracksClientConnection hcc, IRequestParameters requestParameters,
+            boolean useNewId) throws Exception {
 
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
         ActiveNotificationHandler activeEventHandler =
@@ -220,7 +219,7 @@ public class BADJobService {
         }
 
         BADParserFactory factory = new BADParserFactory();
-        List<Statement> fStatements = factory.createParser(new StringReader(queryBodyString)).parse();
+        List<Statement> fStatements = factory.createParser(queryBodyString).parse();
         JobSpecification jobSpec = null;
         if (listener.getType().equals(DeployedJobSpecEventListener.PrecompiledType.PUSH_CHANNEL)
                 || listener.getType().equals(DeployedJobSpecEventListener.PrecompiledType.CHANNEL)) {

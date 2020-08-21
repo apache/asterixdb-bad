@@ -44,16 +44,16 @@ public class Channel implements IExtensionMetadataEntity {
     /*
     Dependencies are stored as an array of size two:
     element 0 is a list of dataset dependencies
-    -stored as triples of [DataverseName, Dataset, null] for the datasets
+    -stored as triples of [METADATA_TYPE_NAME_DATAVERSENAME, Dataset, null] for the datasets
     element 1 is a list of function dependencies
-    -stored as triples of [DataverseName, FunctionName, Arity] for the functions
+    -stored as triples of [METADATA_TYPE_NAME_DATAVERSENAME, FunctionName, Arity] for the functions
     */
     private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
     public Channel(DataverseName dataverseName, String channelName, String subscriptionsDataset, String resultsDataset,
             FunctionSignature function, String duration, List<List<Triple<DataverseName, String, String>>> dependencies,
             String channelBody) {
-        this.channelId = new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, dataverseName, channelName);
+        this.channelId = new EntityId(BADConstants.RUNTIME_ENTITY_CHANNEL, dataverseName, channelName);
         this.function = function;
         this.duration = duration;
         this.resultsDatasetName = resultsDataset;

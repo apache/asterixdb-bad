@@ -50,8 +50,10 @@ public class BrokerTupleTranslator extends AbstractTupleTranslator<Broker> {
                 ((AString) brokerRecord.getValueByPos(BADMetadataRecordTypes.BROKER_NAME_FIELD_INDEX)).getStringValue();
         String endPointName = ((AString) brokerRecord.getValueByPos(BADMetadataRecordTypes.BROKER_ENDPOINT_FIELD_INDEX))
                 .getStringValue();
+        String brokerType =
+                ((AString) brokerRecord.getValueByPos(BADMetadataRecordTypes.BROKER_TYPE_FIELD_INDEX)).getStringValue();
 
-        return new Broker(dataverseName, brokerName, endPointName);
+        return new Broker(dataverseName, brokerName, endPointName, brokerType);
     }
 
     @Override
@@ -88,6 +90,12 @@ public class BrokerTupleTranslator extends AbstractTupleTranslator<Broker> {
         aString.setValue(broker.getEndPointName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(BADMetadataRecordTypes.BROKER_ENDPOINT_FIELD_INDEX, fieldValue);
+
+        // write field 3
+        fieldValue.reset();
+        aString.setValue(broker.getBrokerType());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(BADMetadataRecordTypes.BROKER_TYPE_FIELD_INDEX, fieldValue);
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);

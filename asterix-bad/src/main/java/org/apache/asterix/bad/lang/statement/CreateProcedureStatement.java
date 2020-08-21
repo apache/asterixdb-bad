@@ -34,7 +34,7 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.bad.BADJobService;
-import org.apache.asterix.bad.lang.BADLangExtension;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.lang.BADParserFactory;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener.PrecompiledType;
@@ -240,7 +240,7 @@ public class CreateProcedureStatement extends ExtensionStatement {
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         initialize();
         DataverseName dataverse = statementExecutor.getActiveDataverseName(signature.getDataverseName());
-        EntityId entityId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverse, signature.getName());
+        EntityId entityId = new EntityId(BADConstants.RUNTIME_ENTITY_PROCEDURE, dataverse, signature.getName());
         DeployedJobSpecEventListener listener = (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);
         boolean alreadyActive = false;
         Procedure procedure = null;

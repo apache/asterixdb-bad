@@ -36,13 +36,13 @@
   </transactionLogDir>
   <extensions>
     <extension>
-      <extensionClassName>org.apache.asterix.bad.lang.BADQueryTranslatorExtension</extensionClassName>
+      <extensionClassName>org.apache.asterix.bad.extension.BADQueryTranslatorExtension</extensionClassName>
     </extension>
     <extension>
-      <extensionClassName>org.apache.asterix.bad.lang.BADLangExtension</extensionClassName>
+      <extensionClassName>org.apache.asterix.bad.extension.BADLangExtension</extensionClassName>
     </extension>
     <extension>
-      <extensionClassName>org.apache.asterix.bad.metadata.BADMetadataExtension</extensionClassName>
+      <extensionClassName>org.apache.asterix.bad.extension.BADMetadataExtension</extensionClassName>
     </extension>
   </extensions>
   <property>

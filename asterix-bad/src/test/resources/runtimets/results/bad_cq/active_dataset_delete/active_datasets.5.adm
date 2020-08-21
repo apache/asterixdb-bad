@@ -1,0 +1,1 @@
+{ "t": { "tid": 999, "area_code": "45", "text": "Tweet 1.", "location": point("1998078.3009357268,1998011.0235705695"), "timestamp": datetime("2019-12-03T17:59:52.041Z"), "hatefulFlag": false }, "Time": datetime("2020-08-18T06:46:51.696Z") }

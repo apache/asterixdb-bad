@@ -16,13 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Create Procedure Check Metadata
-* Expected Res : Success
-* Date         : Jan 2017
-* Author       : Steven Jacobs
-*/
-
 drop dataverse two if exists;
 drop dataverse channels if exists;
 create dataverse channels;

@@ -35,9 +35,9 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.bad.BADJobService;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.lang.BADCompilationProvider;
-import org.apache.asterix.bad.lang.BADLangExtension;
-import org.apache.asterix.bad.lang.BADStatementExecutor;
+import org.apache.asterix.bad.lang.BADQueryTranslator;
 import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener.PrecompiledType;
@@ -96,8 +96,8 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
         SessionConfig sessionConfig =
                 new SessionConfig(SessionConfig.OutputFormat.ADM, true, true, true, SessionConfig.PlanFormat.STRING);
         final SessionOutput sessionOutput = new SessionOutput(sessionConfig, null);
-        BADStatementExecutor badStatementExecutor =
-                new BADStatementExecutor(appCtx, new ArrayList<>(), sessionOutput, new BADCompilationProvider(),
+        BADQueryTranslator badStatementExecutor =
+                new BADQueryTranslator(appCtx, new ArrayList<>(), sessionOutput, new BADCompilationProvider(),
                         Executors.newSingleThreadExecutor(
                                 new HyracksThreadFactory(DefaultStatementExecutorFactory.class.getSimpleName())),
                         new ResponsePrinter(sessionOutput));
@@ -133,10 +133,11 @@ public class BADGlobalRecoveryManager extends GlobalRecoveryManager {
                     new RequestParameters(requestReference, null, null, null, null, null, null, null, null, null, true),
                     true);
 
-            ScheduledExecutorService ses = BADJobService.startRepetitiveDeployedJobSpec(listener.getDeployedJobSpecId(),
-                    hcc, BADJobService.findPeriod(channel.getDuration()), new HashMap<>(), entityId,
-                    metadataProvider.getTxnIdFactory(), listener);
+            ScheduledExecutorService ses = BADJobService.createExecutorServe();
             listener.setExecutorService(ses);
+            BADJobService.startRepetitiveDeployedJobSpec(ses, listener.getDeployedJobSpecId(), hcc,
+                    BADJobService.findPeriod(channel.getDuration()), new HashMap<>(), entityId,
+                    metadataProvider.getTxnIdFactory(), listener);
             metadataProvider.getLocks().unlock();
 
             LOGGER.log(Level.SEVERE, entityId.getExtensionName() + " " + entityId.getDataverseName() + "."

@@ -39,9 +39,9 @@ public class BADOptimizerTest extends OptimizerTest {
     public static void setUp() throws Exception {
         final File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-
         extensionLangCompilationProvider = new BADCompilationProvider();
         statementExecutorFactory = new BADQueryTranslatorFactory();
+        integrationUtil = new BADAsterixHyracksIntegrationUtil();
 
         integrationUtil.init(true, TEST_CONFIG_FILE_NAME);
         // Set the node resolver to be the identity resolver that expects node names

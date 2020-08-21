@@ -22,18 +22,88 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.bad.rules.InsertBrokerNotifierForChannelRule;
+import org.apache.asterix.bad.rules.RewriteChannelTimeFunctionToLocalVarRule;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.DefaultRuleSetFactory;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
 import org.apache.asterix.optimizer.base.RuleCollections;
+import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
+import org.apache.asterix.optimizer.rules.MetaFunctionToMetaVariableRule;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
+import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class BADRuleSetFactory implements IRuleSetFactory {
+
+    private boolean isSameRuleCollection(List<IAlgebraicRewriteRule> listA, List<IAlgebraicRewriteRule> listB) {
+        if (listA.size() != listB.size()) {
+            return false;
+        }
+        for (int i = 0; i < listA.size(); i++) {
+            if (!listA.get(i).getClass().equals(listB.get(i).getClass())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void updateNormalizationRules(
+            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRuleSet,
+            ICcApplicationContext appCtx) {
+        // gen original normalization rules
+        List<IAlgebraicRewriteRule> originalNormalizationRules =
+                RuleCollections.buildNormalizationRuleCollection(appCtx);
+        // make a copy
+        List<IAlgebraicRewriteRule> alteredNormalizationRules = new ArrayList<>();
+        alteredNormalizationRules.addAll(originalNormalizationRules);
+
+        // insert the broker rule
+        for (int i = 0; i < alteredNormalizationRules.size(); i++) {
+            IAlgebraicRewriteRule rule = alteredNormalizationRules.get(i);
+            if (rule instanceof UnnestToDataScanRule) {
+                alteredNormalizationRules.add(i + 1, new InsertBrokerNotifierForChannelRule());
+            }
+        }
+
+        // replace all normalization rule collections with the new one
+        SequentialFixpointRuleController seqOnceCtrl = new SequentialFixpointRuleController(true);
+        for (int i = 0; i < logicalRuleSet.size(); i++) {
+            List<IAlgebraicRewriteRule> existingRuleCollection = logicalRuleSet.get(i).second;
+            if (isSameRuleCollection(existingRuleCollection, originalNormalizationRules)) {
+                logicalRuleSet.set(i, new Pair<>(seqOnceCtrl, alteredNormalizationRules));
+            }
+        }
+    }
+
+    private void addRewriteChannelTimeFunctionRule(
+            List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRuleSet,
+            ICcApplicationContext appCtx) {
+        // gen original normalization rules
+        List<IAlgebraicRewriteRule> originalRuleCollection = RuleCollections.buildLoadFieldsRuleCollection(appCtx);
+        // make a copy
+        List<IAlgebraicRewriteRule> alteredRuleCollection = new ArrayList<>();
+        alteredRuleCollection.addAll(originalRuleCollection);
+        // insert the broker rule
+        for (int i = 0; i < alteredRuleCollection.size(); i++) {
+            IAlgebraicRewriteRule rule = alteredRuleCollection.get(i);
+            if (rule instanceof FeedScanCollectionToUnnest) {
+                alteredRuleCollection.add(i + 1, new MetaFunctionToMetaVariableRule());
+                alteredRuleCollection.add(i + 1, new RewriteChannelTimeFunctionToLocalVarRule());
+            }
+        }
+
+        // replace all normalization rule collections with the new one
+        SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(true);
+        for (int i = 0; i < logicalRuleSet.size(); i++) {
+            List<IAlgebraicRewriteRule> existingRuleCollection = logicalRuleSet.get(i).second;
+            if (isSameRuleCollection(existingRuleCollection, originalRuleCollection)) {
+                logicalRuleSet.set(i, new Pair<>(seqCtrlNoDfs, alteredRuleCollection));
+            }
+        }
+    }
 
     @Override
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(
@@ -41,38 +111,9 @@ public class BADRuleSetFactory implements IRuleSetFactory {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRuleSet =
                 DefaultRuleSetFactory.buildLogical(appCtx);
 
-        List<IAlgebraicRewriteRule> normalizationCollection = RuleCollections.buildNormalizationRuleCollection(appCtx);
-        List<IAlgebraicRewriteRule> alteredNormalizationCollection = new ArrayList<>();
-        alteredNormalizationCollection.addAll(normalizationCollection);
+        updateNormalizationRules(logicalRuleSet, appCtx);
+        addRewriteChannelTimeFunctionRule(logicalRuleSet, appCtx);
 
-        //Create a normalization collection that includes the broker rule
-        for (int i = 0; i < alteredNormalizationCollection.size(); i++) {
-            IAlgebraicRewriteRule rule = alteredNormalizationCollection.get(i);
-            if (rule instanceof UnnestToDataScanRule) {
-                alteredNormalizationCollection.add(i + 1, new InsertBrokerNotifierForChannelRule());
-                break;
-            }
-        }
-
-        //Find instances of the normalization collection and replace them with the new one
-        SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
-        for (int i = 0; i < logicalRuleSet.size(); i++) {
-            List<IAlgebraicRewriteRule> collection = logicalRuleSet.get(i).second;
-            if (collection.size() == normalizationCollection.size()) {
-                boolean isNormalizationCollection = true;
-                for (int j = 0; j < collection.size(); j++) {
-                    //Make sure the set of rules is the same
-                    if (!collection.get(j).getClass().equals(normalizationCollection.get(j).getClass())) {
-                        isNormalizationCollection = false;
-                        break;
-                    }
-                }
-                if (isNormalizationCollection) {
-                    //replace with the new collection
-                    logicalRuleSet.set(i, new Pair<>(seqOnceCtrl, alteredNormalizationCollection));
-                }
-            }
-        }
         return logicalRuleSet;
     }
 

@@ -24,7 +24,8 @@ import java.util.List;
 import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.BADConstants;
-import org.apache.asterix.bad.lang.BADLangExtension;
+import org.apache.asterix.bad.BADUtils;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.metadata.Broker;
 import org.apache.asterix.bad.metadata.Channel;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -154,11 +155,11 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
             Query subscriptionTuple = new Query(false);
 
             List<FieldBinding> fb = new ArrayList<>();
-            LiteralExpr leftExpr = new LiteralExpr(new StringLiteral(BADConstants.DataverseName));
+            LiteralExpr leftExpr = new LiteralExpr(new StringLiteral(BADConstants.METADATA_TYPE_NAME_DATAVERSENAME));
             Expression rightExpr = new LiteralExpr(new StringLiteral(brokerDataverse.getCanonicalForm()));
             fb.add(new FieldBinding(leftExpr, rightExpr));
 
-            leftExpr = new LiteralExpr(new StringLiteral(BADConstants.BrokerName));
+            leftExpr = new LiteralExpr(new StringLiteral(BADConstants.METADATA_TYPE_FIELD_NAME_BROKERNAME));
             rightExpr = new LiteralExpr(new StringLiteral(broker.getBrokerName()));
             fb.add(new FieldBinding(leftExpr, rightExpr));
 
@@ -183,9 +184,9 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
             RecordConstructor recordCon = new RecordConstructor(fb);
             subscriptionTuple.setBody(recordCon);
             subscriptionTuple.setVarCounter(varCounter);
-            MetadataProvider tempMdProvider = MetadataProvider.create(metadataProvider.getApplicationContext(),
-                    metadataProvider.getDefaultDataverse());
-            tempMdProvider.getConfig().putAll(metadataProvider.getConfig());
+
+            metadataProvider.setResultSetId(new ResultSetId(resultSetId));
+            MetadataProvider tempMdProvider = BADUtils.replicateMetadataProvider(metadataProvider);
 
             final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
             final IResultSet resultSet = requestParameters.getResultSet();
@@ -197,16 +198,10 @@ public class ChannelSubscribeStatement extends ExtensionStatement {
                 useResultVar.setIsNewVar(false);
                 FieldAccessor accessor = new FieldAccessor(useResultVar, new Identifier(BADConstants.SubscriptionId));
 
-                metadataProvider.setResultSetId(new ResultSetId(resultSetId));
                 boolean resultsAsync =
                         resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED;
                 metadataProvider.setResultAsyncMode(resultsAsync);
-                tempMdProvider.setResultSetId(metadataProvider.getResultSetId());
                 tempMdProvider.setResultAsyncMode(resultsAsync);
-                tempMdProvider.setWriterFactory(metadataProvider.getWriterFactory());
-                tempMdProvider
-                        .setResultSerializerFactoryProvider(metadataProvider.getResultSerializerFactoryProvider());
-                tempMdProvider.setOutputFile(metadataProvider.getOutputFile());
                 tempMdProvider.setMaxResultReads(requestParameters.getResultProperties().getMaxReads());
 
                 InsertStatement insert = new InsertStatement(dataverse, subscriptionsDatasetName, subscriptionTuple,

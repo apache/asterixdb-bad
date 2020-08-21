@@ -1,0 +1,11 @@
+{"tid" : 0, "area_name": "UCI", "suspicious_level": 9, "text": "Tweet 1", "location": point("68.41629186478751, 44.631424133284966"), "timestamp": datetime("2018-11-09T00:00:00.000Z"), "threatening_flag": true}
+{"tid" : 1, "area_name": "SD", "suspicious_level": 2, "text": "Tweet 2", "location": point("2026.6769440649875, 2018.7964303566189"), "timestamp": datetime("2017-11-07T00:00:00.000Z"), "threatening_flag": false}
+{"tid" : 2, "area_name": "LA", "suspicious_level": 10, "text": "Tweet 3", "location": point("4037.165975321966, 4020.6200896429373"), "timestamp": datetime("2018-08-14T00:00:00.000Z"), "threatening_flag": true}
+{"tid" : 3, "area_name": "UCI", "suspicious_level": 5, "text": "Tweet 4", "location": point("6011.1101544678095, 6033.86438259922"), "timestamp": datetime("2018-05-18T00:00:00.000Z"), "threatening_flag": true}
+{"tid" : 4, "area_name": "UCI", "suspicious_level": 3, "text": "Tweet 5", "location": point("8059.243121712048, 8070.611768137903"), "timestamp": datetime("2018-10-27T00:00:00.000Z"), "threatening_flag": false}
+{"tid" : 5, "area_name": "LA", "suspicious_level": 8, "text": "Tweet 6", "location": point("10030.582330779562, 10035.23466920704"), "timestamp": datetime("2017-04-11T00:00:00.000Z"), "threatening_flag": false}
+{"tid" : 6, "area_name": "LA", "suspicious_level": 9, "text": "Tweet 7", "location": point("12074.059527318483, 12008.549148129303"), "timestamp": datetime("2017-04-23T00:00:00.000Z"), "threatening_flag": true}
+{"tid" : 7, "area_name": "UCI", "suspicious_level": 6, "text": "Tweet 8", "location": point("14047.406241253855, 14063.900105905997"), "timestamp": datetime("2018-06-06T00:00:00.000Z"), "threatening_flag": false}
+{"tid" : 8, "area_name": "LA", "suspicious_level": 8, "text": "Tweet 9", "location": point("16051.9846352692, 16078.599078960015"), "timestamp": datetime("2018-03-27T00:00:00.000Z"), "threatening_flag": true}
+{"tid" : 9, "area_name": "UCI", "suspicious_level": 1, "text": "Tweet 10", "location": point("18006.76288487177, 18014.17514030951"), "timestamp": datetime("2017-08-29T00:00:00.000Z"), "threatening_flag": false}
+{"tid" : 10, "area_name": "SD", "suspicious_level": 0, "text": "Tweet 11", "location": point("20088.467372365518, 20051.89371416724"), "timestamp": datetime("2017-10-01T00:00:00.000Z"), "threatening_flag": true}

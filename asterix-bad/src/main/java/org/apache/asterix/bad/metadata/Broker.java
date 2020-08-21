@@ -29,11 +29,13 @@ public class Broker implements IExtensionMetadataEntity {
     private final DataverseName dataverseName;
     private final String brokerName;
     private final String endPointName;
+    private final String brokerType;
 
-    public Broker(DataverseName dataverseName, String brokerName, String endPointName) {
+    public Broker(DataverseName dataverseName, String brokerName, String endPointName, String brokerType) {
         this.endPointName = endPointName;
         this.dataverseName = dataverseName;
         this.brokerName = brokerName;
+        this.brokerType = brokerType;
     }
 
     public DataverseName getDataverseName() {
@@ -46,6 +48,10 @@ public class Broker implements IExtensionMetadataEntity {
 
     public String getEndPointName() {
         return endPointName;
+    }
+
+    public String getBrokerType() {
+        return brokerType;
     }
 
     @Override
@@ -67,4 +73,5 @@ public class Broker implements IExtensionMetadataEntity {
     public ExtensionMetadataDatasetId getDatasetId() {
         return BADMetadataIndexes.BAD_BROKER_INDEX_ID;
     }
+
 }

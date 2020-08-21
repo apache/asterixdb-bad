@@ -68,7 +68,7 @@ public class BADListenerTest {
     @BeforeClass
     public static void init() {
         djsel = new DeployedJobSpecEventListener(null,
-                new EntityId(BADConstants.CHANNEL_EXTENSION_NAME, DataverseName.createSinglePartName("test"), "test"),
+                new EntityId(BADConstants.RUNTIME_ENTITY_CHANNEL, DataverseName.createSinglePartName("test"), "test"),
                 DeployedJobSpecEventListener.PrecompiledType.CHANNEL);
     }
 

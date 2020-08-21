@@ -20,7 +20,7 @@ package org.apache.asterix.bad.lang.statement;
 
 import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.app.translator.QueryTranslator;
-import org.apache.asterix.bad.lang.BADLangExtension;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.metadata.Broker;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;

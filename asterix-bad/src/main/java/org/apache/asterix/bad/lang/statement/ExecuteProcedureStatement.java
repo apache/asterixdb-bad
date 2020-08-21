@@ -30,7 +30,7 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.bad.BADConstants;
 import org.apache.asterix.bad.BADJobService;
-import org.apache.asterix.bad.lang.BADLangExtension;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.metadata.DeployedJobSpecEventListener;
 import org.apache.asterix.bad.metadata.Procedure;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -109,7 +109,7 @@ public class ExecuteProcedureStatement extends ExtensionStatement {
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         DataverseName dataverse = statementExecutor.getActiveDataverseName(dataverseName);
         boolean txnActive = false;
-        EntityId entityId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverse, procedureName);
+        EntityId entityId = new EntityId(BADConstants.RUNTIME_ENTITY_PROCEDURE, dataverse, procedureName);
         DeployedJobSpecEventListener listener = (DeployedJobSpecEventListener) activeEventHandler.getListener(entityId);
         Procedure procedure;
 
@@ -129,10 +129,11 @@ public class ExecuteProcedureStatement extends ExtensionStatement {
                         (QueryTranslator) statementExecutor);
 
             } else {
-                ScheduledExecutorService ses = BADJobService.startRepetitiveDeployedJobSpec(deployedJobSpecId, hcc,
+                ScheduledExecutorService ses = BADJobService.createExecutorServe();
+                listener.setExecutorService(ses);
+                BADJobService.startRepetitiveDeployedJobSpec(ses, deployedJobSpecId, hcc,
                         BADJobService.findPeriod(procedure.getDuration()), contextRuntimeVarMap, entityId,
                         metadataProvider.getTxnIdFactory(), listener);
-                listener.setExecutorService(ses);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             txnActive = false;

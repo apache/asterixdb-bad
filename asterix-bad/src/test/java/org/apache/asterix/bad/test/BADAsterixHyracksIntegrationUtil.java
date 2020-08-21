@@ -19,6 +19,7 @@
 package org.apache.asterix.bad.test;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -26,31 +27,14 @@ import org.junit.runners.Parameterized;
 public class BADAsterixHyracksIntegrationUtil extends AsterixHyracksIntegrationUtil {
 
     public static void main(String[] args) throws Exception {
+        TestUtils.redirectLoggingToConsole();
         BADAsterixHyracksIntegrationUtil integrationUtil = new BADAsterixHyracksIntegrationUtil();
         try {
-            integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"),
-                    System.getProperty("external.lib", ""));
+            integrationUtil.run(true, Boolean.getBoolean("cleanup.shutdown"),
+                    System.getProperty("external.lib", "asterixdb/asterix-opt/asterix-bad/src/main/resources/cc.conf"));
         } catch (Exception e) {
+            e.printStackTrace();
             System.exit(1);
         }
     }
-
-    @Override
-    protected void run(boolean cleanupOnStart, boolean cleanupOnShutdown, String loadExternalLibs) throws Exception {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                try {
-                    deinit(cleanupOnShutdown);
-                } catch (Exception e) {
-
-                }
-            }
-        });
-        init(cleanupOnStart, "asterixdb/asterix-opt/asterix-bad/src/main/resources/cc.conf");
-        while (true) {
-            Thread.sleep(10000);
-        }
-    }
-
 }

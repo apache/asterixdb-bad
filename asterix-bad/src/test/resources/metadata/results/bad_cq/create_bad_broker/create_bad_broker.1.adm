@@ -1,0 +1,2 @@
+{ "Broker": { "DataverseName": "test", "BrokerName": "brokerA", "BrokerEndPoint": "http://127.0.0.1:10100", "BrokerType": "bad" } }
+{ "Broker": { "DataverseName": "test", "BrokerName": "brokerB", "BrokerEndPoint": "http://127.0.0.1:10100", "BrokerType": "general" } }

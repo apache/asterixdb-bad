@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
@@ -56,6 +55,8 @@ public class BADExecutionTest {
     private static final TestExecutor testExecutor = new TestExecutor();
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
+    private static final String TEST_SUITE_FILE = "testsuite_bad.xml";
+    private static final String ONLY_SUITE_FILE = "only_bad.xml";
 
     protected static TestGroup FailedGroup;
     protected TestLsmBtreeLocalResource resource = null;
@@ -64,7 +65,7 @@ public class BADExecutionTest {
     public static void setUp() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-        ExecutionTestUtil.setUp(cleanupOnStart, TEST_CONFIG_FILE_NAME, new AsterixHyracksIntegrationUtil(), false,
+        ExecutionTestUtil.setUp(cleanupOnStart, TEST_CONFIG_FILE_NAME, new BADAsterixHyracksIntegrationUtil(), false,
                 null);
     }
 
@@ -76,7 +77,11 @@ public class BADExecutionTest {
 
     @Parameters(name = "BADExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return buildTestsInXml("testsuite.xml");
+        Collection<Object[]> test_cases = buildTestsInXml(ONLY_SUITE_FILE);
+        if (test_cases.size() == 0) {
+            test_cases = buildTestsInXml(TEST_SUITE_FILE);
+        }
+        return test_cases;
     }
 
     protected static Collection<Object[]> buildTestsInXml(String xmlfile) throws Exception {

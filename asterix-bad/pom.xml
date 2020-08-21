@@ -27,7 +27,7 @@
     <properties>
     <asterix.version>0.9.5-SNAPSHOT</asterix.version>
     <hyracks.version>0.3.5-SNAPSHOT</hyracks.version>
-    <testLog4jConfigFile>${root.dir}/../../asterix-app/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
+    <testLog4jConfigFile>src/main/resources/log4j2-bad.xml</testLog4jConfigFile>
     </properties>
     <build>
     <plugins>
@@ -100,6 +100,7 @@
         <configuration>
           <excludes combine.children="append">
             <exclude>src/test/resources/**/results/**</exclude>
+              <exclude>data/**</exclude>
           </excludes>
         </configuration>
       </plugin>

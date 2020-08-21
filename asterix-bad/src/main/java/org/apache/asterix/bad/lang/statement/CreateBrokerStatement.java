@@ -23,15 +23,19 @@ import java.util.logging.Logger;
 
 import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.app.translator.QueryTranslator;
-import org.apache.asterix.bad.lang.BADLangExtension;
+import org.apache.asterix.bad.BADConstants;
+import org.apache.asterix.bad.extension.BADLangExtension;
 import org.apache.asterix.bad.metadata.Broker;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -44,11 +48,19 @@ public class CreateBrokerStatement extends ExtensionStatement {
     private final DataverseName dataverseName;
     private final Identifier brokerName;
     private String endPointName;
+    private String brokerType;
+    private AdmObjectNode withObjectNode;
 
-    public CreateBrokerStatement(DataverseName dataverseName, Identifier brokerName, String endPointName) {
+    public CreateBrokerStatement(DataverseName dataverseName, Identifier brokerName, String endPointName,
+            RecordConstructor withRecord) throws CompilationException {
         this.brokerName = brokerName;
         this.dataverseName = dataverseName;
         this.endPointName = endPointName;
+        if (withRecord != null) {
+            this.withObjectNode = ExpressionUtils.toNode(withRecord);
+            this.brokerType = withObjectNode.getOptionalString(BADConstants.BAD_BROKER_FIELD_NAME_TYPE);
+        }
+        this.brokerType = brokerType == null ? BADConstants.GENERAL_BROKER_TYPE_NAME : brokerType.toLowerCase();
     }
 
     public String getEndPointName() {
@@ -91,7 +103,7 @@ public class CreateBrokerStatement extends ExtensionStatement {
             if (broker != null) {
                 throw new AlgebricksException("A broker with this name " + brokerName + " already exists.");
             }
-            broker = new Broker(dataverse, brokerName.getValue(), endPointName);
+            broker = new Broker(dataverse, brokerName.getValue(), endPointName, brokerType);
             MetadataManager.INSTANCE.addEntity(mdTxnCtx, broker);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {

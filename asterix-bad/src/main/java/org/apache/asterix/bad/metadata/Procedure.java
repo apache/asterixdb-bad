@@ -42,16 +42,16 @@ public class Procedure implements IExtensionMetadataEntity {
     /*
     Dependencies are stored as an array of size two:
     element 0 is a list of dataset dependencies
-    -stored as triples of [DataverseName, Dataset, null] for the datasets
+    -stored as triples of [METADATA_TYPE_NAME_DATAVERSENAME, Dataset, null] for the datasets
     element 1 is a list of function dependencies
-    -stored as triples of [DataverseName, FunctionName, Arity] for the functions
+    -stored as triples of [METADATA_TYPE_NAME_DATAVERSENAME, FunctionName, Arity] for the functions
      */
     private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
     public Procedure(DataverseName dataverseName, String functionName, int arity, List<String> params, String type,
             String functionBody, String language, String duration,
             List<List<Triple<DataverseName, String, String>>> dependencies) {
-        this.procedureId = new EntityId(BADConstants.PROCEDURE_KEYWORD, dataverseName, functionName);
+        this.procedureId = new EntityId(BADConstants.RUNTIME_ENTITY_PROCEDURE, dataverseName, functionName);
         this.params = params;
         this.body = functionBody;
         this.type = type;
