@@ -140,7 +140,7 @@ public abstract class AbstractCreateChannelStatement extends ExtensionStatement 
         TypeExpression subItemType = new TypeReferenceExpression(
                 new Pair<>(MetadataConstants.METADATA_DATAVERSE_NAME, subscriptionsTypeName));
         DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseName, new Identifier(subscriptionsTableName),
-                subItemType, null, null, new HashMap<>(), DatasetType.INTERNAL, idd, null, true);
+                subItemType, null, new HashMap<>(), DatasetType.INTERNAL, idd, null, true);
 
         ((QueryTranslator) statementExecutor).handleCreateDatasetStatement(metadataProvider, createSubscriptionsDataset,
                 hcc, null);
@@ -155,7 +155,7 @@ public abstract class AbstractCreateChannelStatement extends ExtensionStatement 
             TypeExpression resultItemType =
                     new TypeReferenceExpression(new Pair<>(MetadataConstants.METADATA_DATAVERSE_NAME, resultsTypeName));
             DatasetDecl createResultsDataset = new DatasetDecl(dataverseName, new Identifier(resultsTableName),
-                    resultItemType, null, null, new HashMap<>(), DatasetType.INTERNAL, idd, null, true);
+                    resultItemType, null, new HashMap<>(), DatasetType.INTERNAL, idd, null, true);
 
             //Create an index on timestamp for results
             CreateIndexStatement createTimeIndex = new CreateIndexStatement();
