@@ -255,7 +255,7 @@ CreateContinuousChannelStatement CreateContinuousChannel(Token startStmtToken) t
       removeCurrentScope();
       defaultDataverse = currentDataverse;
       ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
-      CreateFunctionStatement stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, false);
+      CreateFunctionStatement stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, true, false);
       ccs =  new CreateContinuousChannelStatement(fctName.dataverse, new Identifier(fctName.function), period, push, stmt);
       return addSourceLocation(ccs, startStmtToken);
     }

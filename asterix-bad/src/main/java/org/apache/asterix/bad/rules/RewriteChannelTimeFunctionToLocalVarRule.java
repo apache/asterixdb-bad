@@ -138,7 +138,7 @@ public class RewriteChannelTimeFunctionToLocalVarRule implements IAlgebraicRewri
             if (needPrevDsSet.contains(dsVar) || needActiveDsSet.contains(dsVar)) {
                 LogicalVariable channelTimeVar = context.newVar();
                 ILogicalExpression previousChannelTimeExpr = new ScalarFunctionCallExpression(
-                        BuiltinFunctions.getAsterixFunctionInfo(BADFunctions.PREVIOUS_CHANNEL_TIME),
+                        BuiltinFunctions.getBuiltinFunctionInfo(BADFunctions.PREVIOUS_CHANNEL_TIME),
                         new MutableObject<>(
                                 new ConstantExpression(new AsterixConstantValue(new AString(channelName)))));
                 AssignOperator assignOp =
@@ -151,7 +151,7 @@ public class RewriteChannelTimeFunctionToLocalVarRule implements IAlgebraicRewri
             if (needCurrDsSet.contains(dsVar) || needActiveDsSet.contains(dsVar)) {
                 LogicalVariable channelTimeVar = context.newVar();
                 ILogicalExpression previousChannelTimeExpr = new ScalarFunctionCallExpression(
-                        BuiltinFunctions.getAsterixFunctionInfo(BADFunctions.CURRENT_CHANNEL_TIME), new MutableObject<>(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BADFunctions.CURRENT_CHANNEL_TIME), new MutableObject<>(
                                 new ConstantExpression(new AsterixConstantValue(new AString(channelName)))));
                 AssignOperator assignOp =
                         new AssignOperator(channelTimeVar, new MutableObject<>(previousChannelTimeExpr));
