@@ -16,30 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.bad.runtime;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
+CREATE TYPE Tweet AS OPEN {
+ tid: bigint,
+ area_code: string,
+ text: string,
+ location: point,
+ timestamp: datetime
+};
 
-public class ActiveTimestampState extends AbstractStateObject {
 
-    private long previousChannelExecutionTime = -1;
-    private long currentChannelExecutionTime = -1;
+CREATE ACTIVE DATASET Tweets(Tweet) PRIMARY KEY tid;
 
-    public ActiveTimestampState(JobId jobId, Object id) {
-        super(jobId, id);
-    }
+write output to nc1:"rttest/new_tweets.sqlpp";
+set `compiler.indexonly` "false";
 
-    public void setExecutionTime(long prev, long curr) {
-        previousChannelExecutionTime = prev;
-        currentChannelExecutionTime = curr;
-    }
-
-    public long getCurrentChannelExecutionTime() {
-        return currentChannelExecutionTime;
-    }
-
-    public long getPreviousChannelExecutionTime() {
-        return previousChannelExecutionTime;
-    }
-}
+CREATE CONTINUOUS CHANNEL NearbyTweets(oid) PERIOD duration("PT3S")
+{
+ SELECT t FROM Tweets t WHERE meta(t).`_active_timestamp` > current_channel_time(t)
+ AND meta(t).`_active_timestamp` < previous_channel_time(t)
+};

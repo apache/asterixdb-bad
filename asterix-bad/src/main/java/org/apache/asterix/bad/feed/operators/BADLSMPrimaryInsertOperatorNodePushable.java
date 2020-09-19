@@ -44,13 +44,15 @@ public class BADLSMPrimaryInsertOperatorNodePushable extends LSMPrimaryInsertOpe
 
     @Override
     protected void beforeModification(ITupleReference tuple) {
-        if ((tuple.getFieldCount() == 3
-                && tuple.getFieldData(0)[tuple.getFieldStart(2)] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG)
-                || (tuple.getFieldCount() == 4
-                        && tuple.getFieldData(0)[tuple.getFieldStart(2)] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG)) {
-            int targetIdx = tuple.getFieldStart(2) + 14;
+        if (tuple.getFieldCount() >= 3
+                && tuple.getFieldData(0)[tuple.getFieldStart(2)] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG
+                && tuple.getFieldLength(2) == 22) {
+            long currMilli = System.currentTimeMillis();
             ByteBuffer tupleBuff = ByteBuffer.wrap(tuple.getFieldData(0));
-            tupleBuff.putLong(targetIdx, System.currentTimeMillis());
+            tupleBuff.putLong(tuple.getFieldStart(2) + 14, currMilli);
+            if (tuple.getFieldCount() == 4) {
+                tupleBuff.putLong(tuple.getFieldStart(3) + 1, currMilli);
+            }
         }
     }
 }

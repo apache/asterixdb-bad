@@ -120,9 +120,13 @@ public class BADMetadataProvider extends MetadataProvider {
         }
         // add the previous filter third
         int fieldIdx = -1;
+        Integer filterSourceIndicator = null;
+        ARecordType filterItemType = null;
         if (numFilterFields > 0) {
             String filterField = DatasetUtil.getFilterField(dataset).get(0);
-            String[] fieldNames = itemType.getFieldNames();
+            filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(dataset);
+            filterItemType = filterSourceIndicator == 0 ? itemType : metaItemType;
+            String[] fieldNames = filterItemType.getFieldNames();
             int i = 0;
             for (; i < fieldNames.length; i++) {
                 if (fieldNames[i].equals(filterField)) {
@@ -130,9 +134,10 @@ public class BADMetadataProvider extends MetadataProvider {
                 }
             }
             fieldIdx = i;
-            outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
+            outputTypeTraits[f] =
+                    dataFormat.getTypeTraitProvider().getTypeTrait(filterItemType.getFieldTypes()[fieldIdx]);
             outputSerDes[f] =
-                    dataFormat.getSerdeProvider().getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
+                    dataFormat.getSerdeProvider().getSerializerDeserializer(filterItemType.getFieldTypes()[fieldIdx]);
             f++;
         }
         for (int j = 0; j < inputRecordDesc.getFieldCount(); j++) {
@@ -142,7 +147,8 @@ public class BADMetadataProvider extends MetadataProvider {
         RecordDescriptor outputRecordDesc = new RecordDescriptor(outputSerDes, outputTypeTraits);
         op = new BADLSMPrimaryUpsertOperatorDescriptor(spec, outputRecordDesc, fieldPermutation, idfh,
                 missingWriterFactory, modificationCallbackFactory, searchCallbackFactory,
-                dataset.getFrameOpCallbackFactory(metadataProvider), numKeys, itemType, fieldIdx, hasSecondaries);
+                dataset.getFrameOpCallbackFactory(metadataProvider), numKeys, filterSourceIndicator, filterItemType,
+                fieldIdx, hasSecondaries);
         return new Pair<>(op, splitsAndConstraint.second);
     }
 }

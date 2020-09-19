@@ -36,23 +36,25 @@ public class BADLSMPrimaryUpsertOperatorNodePushable extends LSMPrimaryUpsertOpe
     public BADLSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
             IModificationOperationCallbackFactory modCallbackFactory,
-            ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, ARecordType recordType,
-            int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, Integer filterSourceIndicator,
+            ARecordType recordType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
             IMissingWriterFactory missingWriterFactory, boolean hasSecondaries) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, modCallbackFactory,
-                searchCallbackFactory, numOfPrimaryKeys, recordType, filterFieldIndex, frameOpCallbackFactory,
-                missingWriterFactory, hasSecondaries);
+                searchCallbackFactory, numOfPrimaryKeys, filterSourceIndicator, recordType, filterFieldIndex,
+                frameOpCallbackFactory, missingWriterFactory, hasSecondaries);
     }
 
     @Override
     protected void beforeModification(ITupleReference tuple) {
-        if ((tuple.getFieldCount() == 3
-                && tuple.getFieldData(0)[tuple.getFieldStart(2)] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG)
-                || (tuple.getFieldCount() == 4
-                        && tuple.getFieldData(0)[tuple.getFieldStart(2)] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG)) {
-            int targetIdx = tuple.getFieldStart(2) + 14;
+        if (tuple.getFieldCount() >= 3
+                && tuple.getFieldData(0)[tuple.getFieldStart(2)] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG
+                && tuple.getFieldLength(2) == 22) {
+            long currMilli = System.currentTimeMillis();
             ByteBuffer tupleBuff = ByteBuffer.wrap(tuple.getFieldData(0));
-            tupleBuff.putLong(targetIdx, System.currentTimeMillis());
+            tupleBuff.putLong(tuple.getFieldStart(2) + 14, currMilli);
+            if (tuple.getFieldCount() == 4) {
+                tupleBuff.putLong(tuple.getFieldStart(3) + 1, currMilli);
+            }
         }
     }
 }

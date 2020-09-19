@@ -135,6 +135,7 @@ public class BADMetadataExtension implements IMetadataExtension {
         BuiltinFunctions.addFunction(BADFunctions.CURRENT_CHANNEL_TIME, ADateTimeTypeComputer.INSTANCE, false);
         BuiltinFunctions.addFunction(BADFunctions.PREVIOUS_CHANNEL_TIME, ADateTimeTypeComputer.INSTANCE, false);
         BuiltinFunctions.addFunction(BADFunctions.IS_NEW, ABooleanTypeComputer.INSTANCE, true);
+        BuiltinFunctions.addFunction(BADFunctions.ACTIVE_TIMESTAMP, ADateTimeTypeComputer.INSTANCE, true);
 
         // to shadow the master feed rewriter
         BuiltinFunctions.addPrivateFunction(BuiltinFunctions.FEED_COLLECT, BADFeedRewriter.INSTANCE, true);

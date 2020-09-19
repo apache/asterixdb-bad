@@ -37,11 +37,11 @@ public class BADLSMPrimaryUpsertOperatorDescriptor extends LSMPrimaryUpsertOpera
             IMissingWriterFactory missingWriterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
-            IFrameOperationCallbackFactory frameOpCallbackFactory, int numPrimaryKeys, ARecordType recordType,
-            int filterIndex, boolean hasSecondaries) {
+            IFrameOperationCallbackFactory frameOpCallbackFactory, int numPrimaryKeys, Integer filterSourceIndicator,
+            ARecordType itemType, int filterIndex, boolean hasSecondaries) {
         super(spec, outRecDesc, fieldPermutation, indexHelperFactory, missingWriterFactory,
                 modificationOpCallbackFactory, searchOpCallbackFactory, frameOpCallbackFactory, numPrimaryKeys,
-                recordType, filterIndex, hasSecondaries);
+                filterSourceIndicator, itemType, filterIndex, hasSecondaries);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class BADLSMPrimaryUpsertOperatorDescriptor extends LSMPrimaryUpsertOpera
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new BADLSMPrimaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, fieldPermutation,
-                intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numPrimaryKeys, recordType, filterIndex,
-                frameOpCallbackFactory, missingWriterFactory, hasSecondaries);
+                intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numPrimaryKeys, filterSourceIndicator,
+                filterItemType, filterIndex, frameOpCallbackFactory, missingWriterFactory, hasSecondaries);
     }
 }

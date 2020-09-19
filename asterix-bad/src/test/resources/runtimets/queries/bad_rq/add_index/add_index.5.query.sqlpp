@@ -19,4 +19,4 @@
 use channels;
 
 select value array_count(
-(select * from EmergencyChannelResults where deliveryTime > datetime("2017-05-02T17:52:59.570Z")));
+(select * from EmergencyChannelResults where deliveryTime > datetime("2017-05-02T17:52:59.570Z"))) > 1000;

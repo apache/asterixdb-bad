@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.bad.rules.InsertBrokerNotifierForChannelRule;
+import org.apache.asterix.bad.rules.RewriteActiveFunctionsRule;
 import org.apache.asterix.bad.rules.RewriteChannelTimeFunctionToLocalVarRule;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.DefaultRuleSetFactory;
@@ -92,6 +93,7 @@ public class BADRuleSetFactory implements IRuleSetFactory {
             if (rule instanceof FeedScanCollectionToUnnest) {
                 alteredRuleCollection.add(i + 1, new MetaFunctionToMetaVariableRule());
                 alteredRuleCollection.add(i + 1, new RewriteChannelTimeFunctionToLocalVarRule());
+                alteredRuleCollection.add(i + 1, new RewriteActiveFunctionsRule());
             }
         }
 

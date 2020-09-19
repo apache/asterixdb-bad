@@ -27,6 +27,7 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.IAObject;
@@ -72,32 +73,43 @@ public class BADExpressionToPlanTranslator extends SqlppExpressionToPlanTranslat
 
     @Override
     protected ILogicalOperator translateDelete(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
-            List<Mutable<ILogicalExpression>> varRefsForLoading,
-            List<Mutable<ILogicalExpression>> additionalFilteringExpressions, ILogicalOperator inputOp,
+            List<Mutable<ILogicalExpression>> varRefsForLoading, LogicalVariable seqVar, ILogicalOperator pkeyAssignOp,
             CompiledStatements.ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         InsertDeleteUpsertOperator deleteOp;
+        LogicalVariable metaVar = null;
+
         if (!targetDatasource.getDataset().hasMetaPart()) {
             deleteOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
                     InsertDeleteUpsertOperator.Kind.DELETE, false);
         } else {
             // prepare meta record
             IAType metaType = metadataProvider.findMetaType(targetDatasource.getDataset());
-            LogicalVariable metaVar = context.newVar();
+            metaVar = context.newVar();
             AssignOperator metaVariableAssignOp =
                     new AssignOperator(metaVar, new MutableObject<>(makeMetaRecordExpr(metaType)));
-            metaVariableAssignOp.getInputs().add(new MutableObject<>(inputOp));
+            metaVariableAssignOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
             metaVariableAssignOp.setSourceLocation(sourceLoc);
             // create insert op uses meta record
             deleteOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
                     Collections.singletonList(new MutableObject<>(new VariableReferenceExpression(metaVar))),
                     InsertDeleteUpsertOperator.Kind.DELETE, false);
             // change current inputOp to be meta op
-            inputOp = metaVariableAssignOp;
+            pkeyAssignOp = metaVariableAssignOp;
         }
-        deleteOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-        deleteOp.getInputs().add(new MutableObject<>(inputOp));
+
+        deleteOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
         deleteOp.setSourceLocation(sourceLoc);
+
+        List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
+        List<Mutable<ILogicalExpression>> filterExprs = null;
+        Integer filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(targetDatasource.getDataset());
+        if (filterField != null) {
+            filterExprs = generatedFilterExprs(deleteOp, filterField, filterSourceIndicator == 0 ? seqVar : metaVar,
+                    sourceLoc);
+        }
+        deleteOp.setAdditionalFilteringExpressions(filterExprs);
+
         DelegateOperator leafOperator = new DelegateOperator(new CommitOperator(true));
         leafOperator.getInputs().add(new MutableObject<>(deleteOp));
         leafOperator.setSourceLocation(sourceLoc);
@@ -105,23 +117,23 @@ public class BADExpressionToPlanTranslator extends SqlppExpressionToPlanTranslat
     }
 
     @Override
-    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
-            List<Mutable<ILogicalExpression>> varRefsForLoading, List<Mutable<ILogicalExpression>> filterExprs,
-            ILogicalOperator pkeyAssignOp, List<String> additionalFilteringField, LogicalVariable unnestVar,
-            ILogicalOperator topOp, List<Mutable<ILogicalExpression>> exprs, LogicalVariable resVar,
-            AssignOperator additionalFilteringAssign, CompiledStatements.ICompiledDmlStatement stmt,
-            IResultMetadata resultMetadata) throws AlgebricksException {
+    protected ILogicalOperator translateUpsert(DatasetDataSource targetDatasource,
+            Mutable<ILogicalExpression> payloadVarRef, List<Mutable<ILogicalExpression>> varRefsForLoading,
+            ILogicalOperator pkeyAssignOp, LogicalVariable unnestVar, ILogicalOperator topOp,
+            List<Mutable<ILogicalExpression>> pkeyExprs, LogicalVariable seqVar,
+            CompiledStatements.ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         CompiledStatements.CompiledUpsertStatement compiledUpsert = (CompiledStatements.CompiledUpsertStatement) stmt;
         Expression returnExpression = compiledUpsert.getReturnExpression();
         InsertDeleteUpsertOperator upsertOp;
         ILogicalOperator rootOperator;
+        LogicalVariable metaVar = null;
 
         ARecordType recordType = (ARecordType) targetDatasource.getItemType();
 
         if (targetDatasource.getDataset().hasMetaPart()) {
             IAType metaType = metadataProvider.findMetaType(targetDatasource.getDataset());
-            LogicalVariable metaVar = context.newVar();
+            metaVar = context.newVar();
             AssignOperator metaVariableAssignOp =
                     new AssignOperator(metaVar, new MutableObject<>(makeMetaRecordExpr(metaType)));
             metaVariableAssignOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
@@ -131,7 +143,7 @@ public class BADExpressionToPlanTranslator extends SqlppExpressionToPlanTranslat
             List<Mutable<ILogicalExpression>> metaExprs = new ArrayList<>(1);
             VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
             metaExprs.add(new MutableObject<>(metaVarRef));
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading, metaExprs,
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadVarRef, varRefsForLoading, metaExprs,
                     InsertDeleteUpsertOperator.Kind.UPSERT, false);
 
             // set previous meta vars
@@ -142,22 +154,32 @@ public class BADExpressionToPlanTranslator extends SqlppExpressionToPlanTranslat
             metaTypes.add(targetDatasource.getMetaItemType());
             upsertOp.setPrevAdditionalNonFilteringTypes(metaTypes);
         } else {
-            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
+            upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadVarRef, varRefsForLoading,
                     InsertDeleteUpsertOperator.Kind.UPSERT, false);
-            // Create and add a new variable used for representing the original record
-            if (additionalFilteringField != null) {
-                upsertOp.setPrevFilterVar(context.newVar());
-                upsertOp.setPrevFilterType(recordType.getFieldType(additionalFilteringField.get(0)));
-            }
         }
+
         // Create and add a new variable used for representing the original record
         upsertOp.setUpsertIndicatorVar(context.newVar());
         upsertOp.setUpsertIndicatorVarType(BuiltinType.ABOOLEAN);
         upsertOp.setPrevRecordVar(context.newVar());
         upsertOp.setPrevRecordType(recordType);
         upsertOp.setSourceLocation(sourceLoc);
-        upsertOp.setAdditionalFilteringExpressions(filterExprs);
         upsertOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
+
+        List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
+        List<Mutable<ILogicalExpression>> filterExprs = null;
+        Integer filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(targetDatasource.getDataset());
+        if (filterField != null) {
+            filterExprs = generatedFilterExprs(upsertOp, filterField, filterSourceIndicator == 0 ? seqVar : metaVar,
+                    sourceLoc);
+            ARecordType filterSourceType = filterSourceIndicator == 0 ? (ARecordType) targetDatasource.getItemType()
+                    : (ARecordType) targetDatasource.getMetaItemType();
+            upsertOp.setAdditionalFilteringExpressions(filterExprs);
+            upsertOp.setPrevFilterVar(context.newVar());
+            upsertOp.setPrevFilterType(filterSourceType.getFieldType(filterField.get(0)));
+        } else {
+            upsertOp.setAdditionalFilteringExpressions(null);
+        }
 
         // Set up delegate operator
         DelegateOperator delegateOperator = new DelegateOperator(new CommitOperator(returnExpression == null));
@@ -171,10 +193,10 @@ public class BADExpressionToPlanTranslator extends SqlppExpressionToPlanTranslat
 
     @Override
     protected ILogicalOperator translateInsert(DatasetDataSource targetDatasource, Mutable<ILogicalExpression> varRef,
-            List<Mutable<ILogicalExpression>> varRefsForLoading, List<Mutable<ILogicalExpression>> filterExprs,
-            ILogicalOperator inputOp, CompiledStatements.ICompiledDmlStatement stmt, IResultMetadata resultMetadata)
-            throws AlgebricksException {
+            List<Mutable<ILogicalExpression>> varRefsForLoading, LogicalVariable seqVar, ILogicalOperator pkeyAssignOp,
+            CompiledStatements.ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
+        LogicalVariable metaVar = null;
 
         InsertDeleteUpsertOperator insertOp;
         if (!targetDatasource.getDataset().hasMetaPart()) {
@@ -183,21 +205,30 @@ public class BADExpressionToPlanTranslator extends SqlppExpressionToPlanTranslat
         } else {
             // prepare meta record
             IAType metaType = metadataProvider.findMetaType(targetDatasource.getDataset());
-            LogicalVariable metaVar = context.newVar();
+            metaVar = context.newVar();
             AssignOperator metaVariableAssignOp =
                     new AssignOperator(metaVar, new MutableObject<>(makeMetaRecordExpr(metaType)));
-            metaVariableAssignOp.getInputs().add(new MutableObject<>(inputOp));
+            metaVariableAssignOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
             metaVariableAssignOp.setSourceLocation(sourceLoc);
             // create insert op uses meta record
             insertOp = new InsertDeleteUpsertOperator(targetDatasource, varRef, varRefsForLoading,
                     Collections.singletonList(new MutableObject<>(new VariableReferenceExpression(metaVar))),
                     InsertDeleteUpsertOperator.Kind.INSERT, false);
             // change current inputOp to be meta op
-            inputOp = metaVariableAssignOp;
+            pkeyAssignOp = metaVariableAssignOp;
+        }
+
+        insertOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
+        insertOp.setSourceLocation(sourceLoc);
+
+        List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
+        List<Mutable<ILogicalExpression>> filterExprs = null;
+        Integer filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(targetDatasource.getDataset());
+        if (filterField != null) {
+            filterExprs = generatedFilterExprs(insertOp, filterField, filterSourceIndicator == 0 ? seqVar : metaVar,
+                    sourceLoc);
         }
         insertOp.setAdditionalFilteringExpressions(filterExprs);
-        insertOp.getInputs().add(new MutableObject<>(inputOp));
-        insertOp.setSourceLocation(sourceLoc);
 
         // Adds the commit operator.
         CompiledStatements.CompiledInsertStatement compiledInsert = (CompiledStatements.CompiledInsertStatement) stmt;

@@ -136,7 +136,7 @@ public abstract class AbstractCreateChannelStatement extends ExtensionStatement 
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add(BADConstants.SubscriptionId);
         partitionFields.add(fieldNames);
-        IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null);
+        IDatasetDetailsDecl idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null, null);
         TypeExpression subItemType = new TypeReferenceExpression(
                 new Pair<>(MetadataConstants.METADATA_DATAVERSE_NAME, subscriptionsTypeName));
         DatasetDecl createSubscriptionsDataset = new DatasetDecl(dataverseName, new Identifier(subscriptionsTableName),
@@ -151,7 +151,7 @@ public abstract class AbstractCreateChannelStatement extends ExtensionStatement 
             fieldNames = new ArrayList<>();
             fieldNames.add(BADConstants.ResultId);
             partitionFields.add(fieldNames);
-            idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null);
+            idd = new InternalDetailsDecl(partitionFields, keyIndicators, true, null, null);
             TypeExpression resultItemType =
                     new TypeReferenceExpression(new Pair<>(MetadataConstants.METADATA_DATAVERSE_NAME, resultsTypeName));
             DatasetDecl createResultsDataset = new DatasetDecl(dataverseName, new Identifier(resultsTableName),
